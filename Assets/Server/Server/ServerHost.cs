@@ -146,7 +146,7 @@ public class Server : MonoBehaviour
 
     void HandleLog(string logString, string stackTrace, LogType type)
     {
-        if (stack.Length > 200) ClearConsole();
+        if (stack.Length > 500) ClearConsole();
         logString = logString.Split("UnityEngine")[0];
         textLogger.text = "> " + logString + "\n" + stack;
         stack = logString + "\n" + stack;
@@ -154,11 +154,16 @@ public class Server : MonoBehaviour
 
     public void DebugRandom()
     {
-        Debug.Log("aaaaaa UwU aaaaaa");
+        print("aaaaaa UwU aaaaaa");
     }
     public void ClearConsole()
     {
         stack = "";
-        Debug.Log("\nConsole Cleared");
+        print("\nConsole Cleared");
+    }
+
+    void print(string str)
+    {
+        MonoBehaviour.print("[SERVER] " + str);
     }
 }

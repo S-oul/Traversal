@@ -28,7 +28,7 @@ public class Client : MonoBehaviour
         }
 
         address.Port = 25565;
-        Debug.Log("Tentative de connexion vers " + address.GetIP());
+        print("Tentative de connexion vers " + address.GetIP());
 
         if (enetHost != null)
         {
@@ -68,13 +68,13 @@ public class Client : MonoBehaviour
                 {
                     case ENet6.EventType.None:
                         {
-                            Debug.Log("None ?");
+                            print("None ?");
                         }
                         break;
 
                     case ENet6.EventType.Connect:
                         {
-                            Debug.Log("Connect");
+                            print("Connect");
 
                             //Our packet 
                             PlayerInfoPacket infoPacket = new()
@@ -94,7 +94,7 @@ public class Client : MonoBehaviour
                         }
 
                     case ENet6.EventType.Disconnect:
-                        Debug.Log("Disconnect");
+                        print("Disconnect");
                         serverPeer = null;
                         Destroy(this);
                         break;
@@ -108,7 +108,7 @@ public class Client : MonoBehaviour
                         }
 
                     case ENet6.EventType.Timeout:
-                        Debug.Log("Timeout");
+                        print("Timeout");
                         break;
                 }
             }
@@ -132,5 +132,13 @@ public class Client : MonoBehaviour
 
                 
         
+    }
+
+
+
+
+    void print(string str)
+    {
+        MonoBehaviour.print("[CLIENT] " + str);
     }
 }
