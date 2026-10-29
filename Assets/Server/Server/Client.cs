@@ -10,7 +10,7 @@ public class Client : MonoBehaviour
     public TMP_InputField hostIP_Field;
     public TMP_InputField playerName_Field;
     
-    private TerrainGeneration _terrainGeneration;
+    public TerrainGeneration _terrainGeneration;
     
     private Host enetHost = null;
     private Peer? serverPeer = null;
@@ -44,6 +44,8 @@ public class Client : MonoBehaviour
     }
     void Start()
     {
+        _terrainGeneration = FindAnyObjectByType<TerrainGeneration>();
+
         if (!ENet6.Library.Initialize())
             throw new Exception("Failed to initialize ENet");
     }
@@ -83,22 +85,28 @@ public class Client : MonoBehaviour
                                 name = playerName_Field.text
                             };
                             
+
+                            List<byte> data = new List<byte>();
+                            infoPacket.Serialize(ref data);
+                            //Enet Packets
+                            Packet packet1 = default;
+                            packet1.Create(data.ToArray(), PacketFlags.Reliable);
+                            serverPeer.Value.Send(0, ref packet1);
+
+
+
                             SeedPacket seedPacket = new()
                             {
                                 seed = _terrainGeneration.seed
                             };
-                            
-                            List<byte> data = new List<byte>();
-                            infoPacket.Serialize(ref data);
-                            seedPacket.Serialize(ref data);
-                            //Enet Packets
-                            Packet packet1 = default;
-                            packet1.Create(data.ToArray(), PacketFlags.Reliable);
-                            
+                            List<byte> data2 = new List<byte>();
+                            seedPacket.Serialize(ref data2);
+
                             Packet packet2 = default;
-                            packet2.Create(data.ToArray(), PacketFlags.Reliable);
-                            serverPeer.Value.Send(0, ref packet1);
+                            packet2.Create(data2.ToArray(), PacketFlags.Reliable);
                             serverPeer.Value.Send(0, ref packet2);
+
+
                             break;
                         }
 
