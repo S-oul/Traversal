@@ -150,6 +150,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Client
   hostIP_Field: {fileID: 2025953754}
   playerName_Field: {fileID: 1862009819}
+  _terrainGeneration: {fileID: 0}
 --- !u!4 &302562383
 Transform:
   m_ObjectHideFlags: 0
