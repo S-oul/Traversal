@@ -1,35 +1,43 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class SceneMerger : MonoBehaviour
 {
 
     public SceneAsset ServerScene;
     
+    public TMP_InputField input_Name;
+    public TMP_Text host_Button;
+
     public List<GameObject> ToDesac = new();
 
     Client client;
 
-    bool flipFlop = false;
+    bool _doIHost = false;
 
     public void HostOrNot()
     {
         client ??= FindAnyObjectByType<Client>();
 
-        flipFlop = !flipFlop;
+        _doIHost = !_doIHost;
 
+        input_Name.interactable = !_doIHost;
 
         ToDesac.ForEach(x => x.SetActive(!x.activeSelf));
 
-        if(flipFlop) 
+        if(_doIHost) 
         {
-            client.ConnectToLocal();
+            host_Button.text = "Stop Host";
             SceneManager.LoadScene(ServerScene.name,LoadSceneMode.Additive);
+            client.ConnectToLocal();
         }
         else
         {
+            host_Button.text = "Host";
             client.Disconnect();
             SceneManager.UnloadSceneAsync(ServerScene.name);
         } 

@@ -25,7 +25,7 @@ public class Server : MonoBehaviour
         public ENet6.Host host;
     };
 
-    private Dictionary<uint,Peer> _connectedPeers = new();
+    private Dictionary<Peer,string> _connectedPeers = new();
 
     private ServerData _serverData = new ServerData();
     private UInt32 nextTick = ENet6.Library.Time;
@@ -71,13 +71,12 @@ public class Server : MonoBehaviour
                 {
                     // Un nouveau joueur s'est connecté
                     case EventType.Connect:
-                        _connectedPeers[eNetEvent.Peer.ID] = eNetEvent.Peer;
                         print($"Peer # {eNetEvent.Peer.ID} connected!");
                         break;
 
                     // Un joueur s'est déconnecté
                     case EventType.Disconnect:
-                        _connectedPeers.Remove(eNetEvent.Peer.ID);
+                        _connectedPeers.Remove(eNetEvent.Peer);
                         print($"Peer # {eNetEvent.Peer.ID} disconnected!");
                         break;
 
@@ -87,7 +86,7 @@ public class Server : MonoBehaviour
                             //print($"Peer # {eNetEvent.Peer.ID} sent a data of ({eNetEvent.Packet.Length} bytes)");
                             byte[] bytes = new byte[eNetEvent.Packet.Length];
                             eNetEvent.Packet.CopyTo(bytes);
-                            HandleFromClient(eNetEvent.Peer.ID, bytes);
+                            HandleFromClient(eNetEvent.Peer, bytes);
 
                             eNetEvent.Packet.Dispose();
                         }
@@ -107,7 +106,7 @@ public class Server : MonoBehaviour
 
     }
 
-    private void HandleFromClient(uint peer, byte[] bytes)
+    private void HandleFromClient(Peer peer, byte[] bytes)
     {
         List<byte> data = bytes.ToList();
         int offset = 0;
@@ -118,6 +117,7 @@ public class Server : MonoBehaviour
             case Opcode.C_PlayerInfo:
                 {
                     packet_PlayerInfoPacket info = packet_PlayerInfoPacket.Deserialize(data, offset);
+                        _connectedPeers[peer] = info.name;
                     print("peer " + peer + " is " + info.name);
                     break;
                 }
@@ -125,7 +125,7 @@ public class Server : MonoBehaviour
                 {
                     foreach (var kvp in _connectedPeers)
                     {
-                        Peer OtherPeer = kvp.Value;
+                        Peer OtherPeer = kvp.Key;
 
                         packet_ServerStartedGame packet = new();
                         List<byte> data2 = new List<byte>();
@@ -141,7 +141,10 @@ public class Server : MonoBehaviour
                 }
             case Opcode.C_PlayerPlay:
                 {
-                    print("From peer " + peer + " -> PLAYED");
+
+                    packet_PlayerTurn turn = packet_PlayerTurn.Deserialize(data, offset);
+                    print("From peer " + _connectedPeers[peer] + " -> played "+ turn.move +" at turn :" + turn.turnNumber);
+
                     break;
                 }
         }
@@ -171,7 +174,7 @@ public class Server : MonoBehaviour
         {
             foreach (var kvp in _connectedPeers)
             {
-                Peer peer = kvp.Value;
+                Peer peer = kvp.Key;
                 peer.DisconnectNow(0);
             }
             _connectedPeers.Clear();
@@ -182,7 +185,7 @@ public class Server : MonoBehaviour
             print("Host disposed.");
         }
 
-        ENet6.Library.Deinitialize();
+        Library.Deinitialize();
         print("ENet library deinitialized.");
     }
 
@@ -209,7 +212,7 @@ public class Server : MonoBehaviour
 
     void HandleLog(string logString, string stackTrace, LogType type)
     {
-        if (stack.Length > 500) ClearConsole();
+        if (stack.Length > 2000) ClearConsole();
         logString = logString.Split("UnityEngine")[0];
         textLogger.text = "> " + logString + "\n" + stack;
         stack = logString + "\n" + stack;

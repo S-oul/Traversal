@@ -229,11 +229,26 @@ public static class Protocole
     public struct packet_PlayerTurn
     {
         static Opcode opcode = Opcode.C_PlayerPlay;
+        
+        public UInt16 turnNumber;
+        // Numerotation Vg4 (Vanguard to g4)
+        public string move;
+
 
         public void Serialize(ref List<byte> byteArray)
         {
             Serialize_Uint8(ref byteArray, (byte)opcode);
+            Serialize_Uint16(ref byteArray, turnNumber);
+            Serialize_str(ref byteArray, move);
 
+        }
+
+        public static packet_PlayerTurn Deserialize(List<byte> byteArray, int offset)
+        {
+            packet_PlayerTurn packet;
+            packet.turnNumber = Deserialize_Uint16(byteArray, ref offset);
+            packet.move = Deserialize_str(byteArray, ref offset);
+            return packet;
         }
     }
 

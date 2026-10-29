@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using static Protocols.Protocole;
 public class Client : MonoBehaviour
@@ -154,12 +155,22 @@ public class Client : MonoBehaviour
     public void DoTurn()
     {
         packet_PlayerTurn packet = new();
+        const string piece = "SVE";
+        const string col = "abcdefghji";
+        
+
+        packet.turnNumber = (ushort) UnityEngine.Random.Range(0,65536);
+        packet.move = 
+        ""+
+        piece[UnityEngine.Random.Range(0,3)]
+        +col[UnityEngine.Random.Range(0,10)]
+        +UnityEngine.Random.Range(1,11);
+
         List<byte> data = new List<byte>();
         packet.Serialize(ref data);
 
         Packet EnetPacket = default;
         EnetPacket.Create(data.ToArray(), PacketFlags.Reliable);
-        print(serverPeer);
         serverPeer.Value.Send(0, ref EnetPacket);
     }
 
