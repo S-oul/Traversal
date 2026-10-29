@@ -182,8 +182,9 @@ public static class Protocole
 
     public enum Opcode : byte
     {
-        C_PlayerInfo
-
+        C_PlayerInfo,
+        C_Seed
+        
     }
 
 
@@ -209,5 +210,26 @@ public static class Protocole
         }
     };
 
+    public struct SeedPacket
+    {
+        static Opcode opcode = Opcode.C_Seed;
+
+        public int seed;
+        
+        public void Serialize(ref List<byte> byteArray)
+        {
+            Serialize_Uint8(ref byteArray, (byte)opcode);
+            Serialize_int32(ref byteArray, seed);
+        }
+        
+        public static SeedPacket Deserialize(List<byte> byteArray, int offset)
+        {
+            SeedPacket packet;
+            packet.seed = Deserialize_int32(byteArray, ref offset);
+            return packet;
+        }
+    }
+
 #endregion
-}}
+}
+}

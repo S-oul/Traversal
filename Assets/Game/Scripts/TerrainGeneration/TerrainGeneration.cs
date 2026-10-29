@@ -11,6 +11,9 @@ public class TerrainGeneration : MonoBehaviour
     [SerializeField] GameObject _groundStack;
 
     GameObject grid = null;
+
+    public int seed => _seed;
+
     public void Generate()
     {
         if(grid != null) DestroyImmediate(grid);
@@ -46,8 +49,8 @@ public class TerrainGeneration : MonoBehaviour
         {
             for (int x = 0; x < GRID_SIZE; x++)
             {
-                float xCoord = (float)x / GRID_SIZE * _scale + _seed;
-                float yCoord = (float)y / GRID_SIZE * _scale + _seed;
+                float xCoord = (float)x / GRID_SIZE * _scale + seed;
+                float yCoord = (float)y / GRID_SIZE * _scale + seed;
 
                 float sample = Mathf.PerlinNoise(xCoord, yCoord);
                 pixels[y * GRID_SIZE + x] = new Color(sample, sample, sample);

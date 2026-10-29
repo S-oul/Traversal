@@ -116,6 +116,12 @@ public class Server : MonoBehaviour
                     print("peer " + peer + " is " + info.name);
                     break;
                 }
+            case Opcode.C_Seed:
+                {
+                    SeedPacket info = SeedPacket.Deserialize(data, offset);
+                    print("From peer " + peer + ", the game seed is " + info.seed);
+                    break;
+                }
         }
     }
     
