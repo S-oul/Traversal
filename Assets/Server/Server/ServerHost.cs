@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-//using System.Numerics;
 using ENet6;
-using Protocols;
 using static Protocols.Protocole;
 using TMPro;
 using UnityEngine;
 using Event = ENet6.Event;
 using EventType = ENet6.EventType;
-using Random = UnityEngine.Random;
 
 public class Server : MonoBehaviour
 {
@@ -83,7 +80,6 @@ public class Server : MonoBehaviour
                     // On a reçu des données d'un joueur
                     case EventType.Receive:
                         {
-                            //print($"Peer # {eNetEvent.Peer.ID} sent a data of ({eNetEvent.Packet.Length} bytes)");
                             byte[] bytes = new byte[eNetEvent.Packet.Length];
                             eNetEvent.Packet.CopyTo(bytes);
                             HandleFromClient(eNetEvent.Peer, bytes);
