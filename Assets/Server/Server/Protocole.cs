@@ -183,14 +183,19 @@ public static class Protocole
     public enum Opcode : byte
     {
         C_PlayerInfo,
-        C_Seed
+        C_PlayerStart,
+        C_PlayerPlay,
+
+        S_ServerStartedGame,
+        S_ServerValidatePlayer,
+        S_Seed
         
     }
 
 
 #region packets
 
-    public struct PlayerInfoPacket
+    public struct packet_PlayerInfoPacket
     {
         static Opcode opcode = Opcode.C_PlayerInfo;
 
@@ -202,17 +207,54 @@ public static class Protocole
             Serialize_str(ref byteArray, name);
 
         }
-        public static PlayerInfoPacket Deserialize(List<byte> byteArray, int offset)
+        public static packet_PlayerInfoPacket Deserialize(List<byte> byteArray, int offset)
         {
-            PlayerInfoPacket packet;
+            packet_PlayerInfoPacket packet;
             packet.name = Deserialize_str(byteArray, ref offset);
             return packet;
         }
     };
 
-    public struct SeedPacket
+    public struct packet_PlayerStartGame
     {
-        static Opcode opcode = Opcode.C_Seed;
+        static Opcode opcode = Opcode.C_PlayerStart;
+
+        public void Serialize(ref List<byte> byteArray)
+        {
+            Serialize_Uint8(ref byteArray, (byte)opcode);
+
+        }
+    }
+
+    public struct packet_PlayerTurn
+    {
+        static Opcode opcode = Opcode.C_PlayerPlay;
+
+        public void Serialize(ref List<byte> byteArray)
+        {
+            Serialize_Uint8(ref byteArray, (byte)opcode);
+
+        }
+    }
+
+    
+
+    //SERVER
+
+
+    public struct packet_ServerStartedGame
+    {
+        static Opcode opcode = Opcode.S_ServerStartedGame;
+
+        public void Serialize(ref List<byte> byteArray)
+        {
+            Serialize_Uint8(ref byteArray, (byte)opcode);
+
+        }
+    }
+    public struct packet_SeedPacket
+    {
+        static Opcode opcode = Opcode.S_Seed;
 
         public int seed;
         
@@ -222,9 +264,9 @@ public static class Protocole
             Serialize_int32(ref byteArray, seed);
         }
         
-        public static SeedPacket Deserialize(List<byte> byteArray, int offset)
+        public static packet_SeedPacket Deserialize(List<byte> byteArray, int offset)
         {
-            SeedPacket packet;
+            packet_SeedPacket packet;
             packet.seed = Deserialize_int32(byteArray, ref offset);
             return packet;
         }

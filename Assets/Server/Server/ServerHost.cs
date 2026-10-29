@@ -25,11 +25,15 @@ public class Server : MonoBehaviour
         public ENet6.Host host;
     };
 
+    private Dictionary<uint,Peer> _connectedPeers = new();
+
     private ServerData _serverData = new ServerData();
     private UInt32 nextTick = ENet6.Library.Time;
 
     private void Start()
     {
+        _connectedPeers.Clear();
+
         // Initialisation d'enet
         if (!ENet6.Library.Initialize())
         {
@@ -67,12 +71,13 @@ public class Server : MonoBehaviour
                 {
                     // Un nouveau joueur s'est connecté
                     case EventType.Connect:
+                        _connectedPeers[eNetEvent.Peer.ID] = eNetEvent.Peer;
                         print($"Peer # {eNetEvent.Peer.ID} connected!");
                         break;
 
                     // Un joueur s'est déconnecté
                     case EventType.Disconnect:
-
+                        _connectedPeers.Remove(eNetEvent.Peer.ID);
                         print($"Peer # {eNetEvent.Peer.ID} disconnected!");
                         break;
 
@@ -112,14 +117,31 @@ public class Server : MonoBehaviour
         {
             case Opcode.C_PlayerInfo:
                 {
-                    PlayerInfoPacket info = PlayerInfoPacket.Deserialize(data, offset);
+                    packet_PlayerInfoPacket info = packet_PlayerInfoPacket.Deserialize(data, offset);
                     print("peer " + peer + " is " + info.name);
                     break;
                 }
-            case Opcode.C_Seed:
+            case Opcode.C_PlayerStart:
                 {
-                    SeedPacket info = SeedPacket.Deserialize(data, offset);
-                    print("From peer " + peer + ", the game seed is " + info.seed);
+                    foreach (var kvp in _connectedPeers)
+                    {
+                        Peer OtherPeer = kvp.Value;
+
+                        packet_ServerStartedGame packet = new();
+                        List<byte> data2 = new List<byte>();
+                        packet.Serialize(ref data2);
+
+                        Packet EnetPacket = default;
+                        EnetPacket.Create(data2.ToArray(), PacketFlags.Reliable);
+
+                        OtherPeer.Send(0,ref EnetPacket);
+                    }
+                    print("From peer " + peer + " -> Game Started");
+                    break;
+                }
+            case Opcode.C_PlayerPlay:
+                {
+                    print("From peer " + peer + " -> PLAYED");
                     break;
                 }
         }
@@ -135,9 +157,42 @@ public class Server : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        ENet6.Library.Deinitialize();
-        _serverData.host.Dispose();
+        ShutdownServer();
     }
+
+    private void OnDestroy()
+    {
+        ShutdownServer();
+    }
+
+    private void ShutdownServer()
+    {
+        if (_serverData?.host != null && _serverData.host.IsSet)
+        {
+            foreach (var kvp in _connectedPeers)
+            {
+                Peer peer = kvp.Value;
+                peer.DisconnectNow(0);
+            }
+            _connectedPeers.Clear();
+
+            _serverData.host.Flush();
+            _serverData.host.Dispose();
+            _serverData.host = null;
+            print("Host disposed.");
+        }
+
+        ENet6.Library.Deinitialize();
+        print("ENet library deinitialized.");
+    }
+
+
+
+
+
+
+
+
 
     string stack = "";
     void OnEnable()
@@ -150,6 +205,8 @@ public class Server : MonoBehaviour
         Application.logMessageReceived -= HandleLog;
     }
 
+
+
     void HandleLog(string logString, string stackTrace, LogType type)
     {
         if (stack.Length > 500) ClearConsole();
@@ -158,10 +215,6 @@ public class Server : MonoBehaviour
         stack = logString + "\n" + stack;
     }
 
-    public void DebugRandom()
-    {
-        print("aaaaaa UwU aaaaaa");
-    }
     public void ClearConsole()
     {
         stack = "";

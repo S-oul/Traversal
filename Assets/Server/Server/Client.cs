@@ -10,11 +10,17 @@ public class Client : MonoBehaviour
     public TMP_InputField hostIP_Field;
     public TMP_InputField playerName_Field;
     
-    public TerrainGeneration _terrainGeneration;
-    
     private Host enetHost = null;
     private Peer? serverPeer = null;
 
+    public void Disconnect()
+    {
+        serverPeer.Value.Disconnect(0);
+    }
+    public void ConnectToLocal()
+    {
+        Connect("localhost");
+    }
     public void Connect(string addressString)
     {
         Address address = new Address();
@@ -44,8 +50,6 @@ public class Client : MonoBehaviour
     }
     void Start()
     {
-        _terrainGeneration = FindAnyObjectByType<TerrainGeneration>();
-
         if (!ENet6.Library.Initialize())
             throw new Exception("Failed to initialize ENet");
     }
@@ -80,7 +84,7 @@ public class Client : MonoBehaviour
                             print("Connect");
 
                             //Our packet 
-                            PlayerInfoPacket infoPacket = new()
+                            packet_PlayerInfoPacket infoPacket = new()
                             {
                                 name = playerName_Field.text
                             };
@@ -92,20 +96,6 @@ public class Client : MonoBehaviour
                             Packet packet1 = default;
                             packet1.Create(data.ToArray(), PacketFlags.Reliable);
                             serverPeer.Value.Send(0, ref packet1);
-
-
-
-                            SeedPacket seedPacket = new()
-                            {
-                                seed = _terrainGeneration.seed
-                            };
-                            List<byte> data2 = new List<byte>();
-                            seedPacket.Serialize(ref data2);
-
-                            Packet packet2 = default;
-                            packet2.Create(data2.ToArray(), PacketFlags.Reliable);
-                            serverPeer.Value.Send(0, ref packet2);
-
 
                             break;
                         }
@@ -132,6 +122,7 @@ public class Client : MonoBehaviour
             while (enetHost.CheckEvents(out evt) > 0);
         }
     }
+
     void HandleFromServer(byte[] bytes)
     {
         List<byte> data = bytes.ToList();
@@ -140,19 +131,37 @@ public class Client : MonoBehaviour
 
         switch (opcode)
         {
-            // case Opcode.:
-            //     {
-
-            //         break;
-            //     }
+            case Opcode.S_ServerStartedGame:
+                {
+                    print("Server Started the game");
+                    break;
+                }
         }
-
-                
-        
     }
 
+    public void StartGame()
+    {
+        packet_PlayerStartGame packet = new();
+        List<byte> data = new List<byte>();
+        packet.Serialize(ref data);
 
+        Packet EnetPacket = default;
+        EnetPacket.Create(data.ToArray(), PacketFlags.Reliable);
+        print(serverPeer);
+        serverPeer.Value.Send(0, ref EnetPacket);
+    }
 
+    public void DoTurn()
+    {
+        packet_PlayerTurn packet = new();
+        List<byte> data = new List<byte>();
+        packet.Serialize(ref data);
+
+        Packet EnetPacket = default;
+        EnetPacket.Create(data.ToArray(), PacketFlags.Reliable);
+        print(serverPeer);
+        serverPeer.Value.Send(0, ref EnetPacket);
+    }
 
     void print(string str)
     {
