@@ -137,6 +137,12 @@ public class Client : MonoBehaviour
                     print("Server Started the game");
                     break;
                 }
+            case Opcode.A_PlayerMove:
+                {   
+                    packet_PlayerTurn turn = packet_PlayerTurn.Deserialize(bytes.ToList(),offset); 
+                    print("Turn : " + turn.turnNumber + " move : " + turn.move);
+                    break;
+                }
         }
     }
 

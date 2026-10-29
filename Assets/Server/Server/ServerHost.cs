@@ -110,7 +110,7 @@ public class Server : MonoBehaviour
     {
         List<byte> data = bytes.ToList();
         int offset = 0;
-        Opcode opcode = (Opcode)Protocole.Deserialize_Uint8(data, ref offset);
+        Opcode opcode = (Opcode)Deserialize_Uint8(data, ref offset);
 
         switch (opcode)
         {
@@ -139,12 +139,16 @@ public class Server : MonoBehaviour
                     print("From peer " + peer + " -> Game Started");
                     break;
                 }
-            case Opcode.C_PlayerPlay:
+            case Opcode.A_PlayerMove:
                 {
+                    Packet EnetPacket = default;
+                    EnetPacket.Create(bytes, PacketFlags.Reliable);
 
-                    packet_PlayerTurn turn = packet_PlayerTurn.Deserialize(data, offset);
-                    print("From peer " + _connectedPeers[peer] + " -> played "+ turn.move +" at turn :" + turn.turnNumber);
-
+                    foreach (var kvp in _connectedPeers)
+                    {
+                        Peer OtherPeer = kvp.Key;
+                        OtherPeer.Send(0,ref EnetPacket);
+                    }
                     break;
                 }
         }

@@ -184,7 +184,8 @@ public static class Protocole
     {
         C_PlayerInfo,
         C_PlayerStart,
-        C_PlayerPlay,
+
+        A_PlayerMove,
 
         S_ServerStartedGame,
         S_ServerValidatePlayer,
@@ -226,11 +227,13 @@ public static class Protocole
         }
     }
 
+ //ALL
+ 
     public struct packet_PlayerTurn
     {
-        static Opcode opcode = Opcode.C_PlayerPlay;
+        static Opcode opcode = Opcode.A_PlayerMove;
         
-        public UInt16 turnNumber;
+        public ushort turnNumber;
         // Numerotation Vg4 (Vanguard to g4)
         public string move;
 
