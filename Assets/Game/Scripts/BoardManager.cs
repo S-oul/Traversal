@@ -14,20 +14,17 @@ namespace Game.Scripts
             _boardSize = generator.gridSize;
             board = new List<GroundStack>();
             board.AddRange(GetComponentsInChildren<GroundStack>());
-            
-            
-            foreach(GroundStack obj in board)
-            {
-                print(obj.name);
-            }
 
             for (int x = 0; x < _boardSize; x++)
             {
-                for(int z = 0; z < _boardSize; z++)
+                for (int z = 0; z < _boardSize; z++)
                 {
-                    Coordinate coordinate = new Coordinate(board[x], new Vector3(x, board[x].Level, z));
+                    int index = x * _boardSize + z;
+
+                    GroundStack stack = board[index];
+                    Coordinate coordinate = new Coordinate(stack, new Vector3(x, stack.Level, z));
                     coordinates.Add(coordinate);
-                    print(board[x].name + "'s position" + coordinate.Position);
+                    print(stack.name + "'s position = " + coordinate.Position);
                 }
             }
         }
