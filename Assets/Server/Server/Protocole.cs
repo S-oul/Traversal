@@ -182,11 +182,14 @@ public static class Protocole
 
     public enum Opcode : byte
     {
+        //Client side (only server Receive)
         C_PlayerInfo,
         C_PlayerStart,
 
+        //All (both can receive)
         A_PlayerMove,
 
+        //server side (only Client Receive)
         S_ServerStartedGame,
         S_ServerValidatePlayer,
         S_Seed

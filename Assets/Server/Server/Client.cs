@@ -103,7 +103,6 @@ public class Client : MonoBehaviour
                     case ENet6.EventType.Disconnect:
                         print("Disconnect");
                         serverPeer = null;
-                        Destroy(this);
                         break;
 
                     case ENet6.EventType.Receive:
@@ -153,7 +152,6 @@ public class Client : MonoBehaviour
 
         Packet EnetPacket = default;
         EnetPacket.Create(data.ToArray(), PacketFlags.Reliable);
-        print(serverPeer);
         serverPeer.Value.Send(0, ref EnetPacket);
     }
 
@@ -166,8 +164,7 @@ public class Client : MonoBehaviour
 
         packet.turnNumber = (ushort) UnityEngine.Random.Range(0,65536);
         packet.move = 
-        ""+
-        piece[UnityEngine.Random.Range(0,3)]
+        piece[UnityEngine.Random.Range(0,3)].ToString()
         +col[UnityEngine.Random.Range(0,10)]
         +UnityEngine.Random.Range(1,11);
 

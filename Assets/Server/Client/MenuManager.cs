@@ -7,7 +7,8 @@ using UnityEngine.SceneManagement;
 public class SceneMerger : MonoBehaviour
 {
 
-    public SceneAsset ServerScene;
+    public string ServerScene;
+    public string LoggerSceneName;
     
     public TMP_InputField input_Name;
     public TMP_Text host_Button;
@@ -31,14 +32,24 @@ public class SceneMerger : MonoBehaviour
         if(_doIHost) 
         {
             host_Button.text = "Stop Host";
-            SceneManager.LoadScene(ServerScene.name,LoadSceneMode.Additive);
+            SceneManager.LoadScene(ServerScene,LoadSceneMode.Additive);
             client.ConnectToLocal();
         }
         else
         {
             host_Button.text = "Host";
             client.Disconnect();
-            SceneManager.UnloadSceneAsync(ServerScene.name);
+            SceneManager.UnloadSceneAsync(ServerScene);
         } 
+    }
+
+
+    public void Start()
+    {
+        Scene loggerScene = SceneManager.GetSceneByName(LoggerSceneName);
+        if (!loggerScene.isLoaded)
+        {
+            SceneManager.LoadScene(LoggerSceneName, LoadSceneMode.Additive);
+        }
     }
 }

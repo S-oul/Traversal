@@ -448,7 +448,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60d6428d46b6034578cebe8116ae7bee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneMerger
-  ServerScene: {fileID: 102900000, guid: c3a348fee34d6b770901172c6c0d1a13, type: 3}
+  ServerScene: ServerScene
+  LoggerSceneName: LoggerScene
   input_Name: {fileID: 1862009819}
   host_Button: {fileID: 293884049}
   ToDesac:

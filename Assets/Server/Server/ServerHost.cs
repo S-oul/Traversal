@@ -10,21 +10,10 @@ using EventType = ENet6.EventType;
 
 public class Server : MonoBehaviour
 {
-    public static Server Instance { get; private set; }
-    private void Awake()
-    {
-        if (Instance == null) Instance = this;
-        else DestroyImmediate(this);
-    }
-    public TextMeshProUGUI textLogger;
-    class ServerData
-    {
-        public ENet6.Host host;
-    };
+    private ENet6.Host _Host;
 
     private Dictionary<Peer,string> _connectedPeers = new();
 
-    private ServerData _serverData = new ServerData();
     private UInt32 nextTick = ENet6.Library.Time;
 
     private void Start()
@@ -43,9 +32,9 @@ public class Server : MonoBehaviour
 
         address.Port = 25565;
 
-        _serverData.host = new Host();
-        _serverData.host.Create(AddressType.Any, address, 10, 10, 0, 0);
-        if (!_serverData.host.IsSet)
+        _Host = new Host();
+        _Host.Create(AddressType.Any, address, 10, 10, 0, 0);
+        if (!_Host.IsSet)
         {
             throw new Exception("Failed to create ENet host (is port free?)");
         }
@@ -60,24 +49,20 @@ public class Server : MonoBehaviour
         UInt32 now = ENet6.Library.Time;
 
         // On gère les événements ENet
-        while (_serverData.host.Service(1, out Event eNetEvent) > 0)
+        while (_Host.Service(1, out Event eNetEvent) > 0)
         {
             do
             {
                 switch (eNetEvent.Type)
                 {
-                    // Un nouveau joueur s'est connecté
                     case EventType.Connect:
-                        print($"Peer # {eNetEvent.Peer.ID} connected!");
                         break;
 
-                    // Un joueur s'est déconnecté
                     case EventType.Disconnect:
                         _connectedPeers.Remove(eNetEvent.Peer);
                         print($"Peer # {eNetEvent.Peer.ID} disconnected!");
                         break;
 
-                    // On a reçu des données d'un joueur
                     case EventType.Receive:
                         {
                             byte[] bytes = new byte[eNetEvent.Packet.Length];
@@ -89,13 +74,13 @@ public class Server : MonoBehaviour
                         break;
                 }
             }
-            while (_serverData.host.Service(1, out eNetEvent) > 0);
+            while (_Host.Service(1, out eNetEvent) > 0);
         }
 
         // Serveur or Physique ?
         if (now >= nextTick)
         {
-            Tick(ref _serverData);
+            Tick(ref _Host);
             //17 ms
             nextTick += 17;
         }
@@ -152,7 +137,7 @@ public class Server : MonoBehaviour
     
 
     //Tick function
-    private void Tick(ref ServerData servData)
+    private void Tick(ref Host servData)
     {
         //print("Tick");
         //Server Update on Fixed DeltaTime (now and Tick)
@@ -170,7 +155,7 @@ public class Server : MonoBehaviour
 
     private void ShutdownServer()
     {
-        if (_serverData?.host != null && _serverData.host.IsSet)
+        if (_Host != null && _Host.IsSet)
         {
             foreach (var kvp in _connectedPeers)
             {
@@ -179,9 +164,9 @@ public class Server : MonoBehaviour
             }
             _connectedPeers.Clear();
 
-            _serverData.host.Flush();
-            _serverData.host.Dispose();
-            _serverData.host = null;
+            _Host.Flush();
+            _Host.Dispose();
+            _Host = null;
             print("Host disposed.");
         }
 
@@ -189,40 +174,6 @@ public class Server : MonoBehaviour
         print("ENet library deinitialized.");
     }
 
-
-
-
-
-
-
-
-
-    string stack = "";
-    void OnEnable()
-    {
-        Application.logMessageReceived += HandleLog;
-    }
-
-    void OnDisable()
-    {
-        Application.logMessageReceived -= HandleLog;
-    }
-
-
-
-    void HandleLog(string logString, string stackTrace, LogType type)
-    {
-        if (stack.Length > 2000) ClearConsole();
-        logString = logString.Split("UnityEngine")[0];
-        textLogger.text = "> " + logString + "\n" + stack;
-        stack = logString + "\n" + stack;
-    }
-
-    public void ClearConsole()
-    {
-        stack = "";
-        print("\nConsole Cleared");
-    }
 
     void print(string str)
     {
