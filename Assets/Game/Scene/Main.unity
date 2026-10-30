@@ -29331,6 +29331,8 @@ MonoBehaviour:
   generator: {fileID: 1314141449}
   board: []
   coordinates: []
+  player1: {fileID: 1605416206}
+  player2: {fileID: 2030846882}
 --- !u!1 &1190442702
 GameObject:
   m_ObjectHideFlags: 0
@@ -37767,8 +37769,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1605416205}
+  - component: {fileID: 1605416206}
   m_Layer: 0
-  m_Name: Team1
+  m_Name: Player1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -37795,6 +37798,19 @@ Transform:
   - {fileID: 2135239850}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1605416206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1605416204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09d8d52864684c21870ce203a75b9ba4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Player
+  team: []
 --- !u!1 &1606430580
 GameObject:
   m_ObjectHideFlags: 0
@@ -49447,8 +49463,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2030846881}
+  - component: {fileID: 2030846882}
   m_Layer: 0
-  m_Name: Team2
+  m_Name: Player2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -49475,6 +49492,19 @@ Transform:
   - {fileID: 824932187}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2030846882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2030846880}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09d8d52864684c21870ce203a75b9ba4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Player
+  team: []
 --- !u!1 &2031480169
 GameObject:
   m_ObjectHideFlags: 0

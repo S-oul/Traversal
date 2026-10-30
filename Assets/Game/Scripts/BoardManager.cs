@@ -5,16 +5,28 @@ namespace Game.Scripts
 {
     public class BoardManager : MonoBehaviour
     {
-        [SerializeField] private TerrainGeneration generator;
+        [SerializeField] private TerrainGeneration generator; 
         [SerializeField] private List<GroundStack> board;
         [SerializeField] private List<Coordinate> coordinates;
+
+        [SerializeField] private Player player1;
+        [SerializeField] private Player player2;
+        
+        private List<Piece> _team1 = new();
+        private List<Piece> _team2 = new();
+        
         private int _boardSize;
         private void Start()
         {
             _boardSize = generator.gridSize;
             board = new List<GroundStack>();
+            
+            _team1 = player1.Team; // Print safe
+            _team2 = player2.Team; // Print safe
+            
             board.AddRange(GetComponentsInChildren<GroundStack>());
-
+            
+            // Add coordinates to each cell
             for (int x = 0; x < _boardSize; x++)
             {
                 for (int z = 0; z < _boardSize; z++)
@@ -24,7 +36,7 @@ namespace Game.Scripts
                     GroundStack stack = board[index];
                     Coordinate coordinate = new Coordinate(stack, new Vector3(x, stack.Level, z));
                     coordinates.Add(coordinate);
-                    print(stack.name + "'s position = " + coordinate.Position);
+                    Debug.Log(stack.name + "'s position = " + coordinate.Position);
                 }
             }
         }
