@@ -1,0 +1,238 @@
+using UnityEngine;
+
+public class TerrainGeneration : MonoBehaviour
+{
+    private const int GRID_SIZE = 10;  
+    public bool Enforce2GapLimits = true;
+    [SerializeField] TerrainGenerationType _type;
+    [SerializeField] private TerrainConfig _currentSettings;
+    [SerializeField] private int _seed = 0;
+    private float _space = 0.05f;
+    private float _scale = 3;
+    [SerializeField] GameObject _groundStack;
+    [SerializeField] private Texture2D _noise;
+    [SerializeField] private Texture2D _riverNoise;
+
+    GameObject grid = null;
+
+    public int seed => _seed;
+
+#region Accessors
+    public TerrainGenerationType Type { get => _type; set => _type = value; }
+    public Texture2D Noise { get => _noise; set => _noise = value; }
+    public Texture2D RiverNoise { get => _riverNoise; set => _riverNoise = value; }
+
+
+#endregion
+    public void Generate(int newSeed)
+    {
+        _seed=newSeed;
+        Generate();
+    }
+    public void Generate()
+    {
+        if(grid != null) DestroyImmediate(grid);
+
+        grid = new GameObject("Grid");
+        //grid.transform.SetParent(transform,false);
+        
+
+        Texture2D finalText = new Texture2D(GRID_SIZE,GRID_SIZE);
+        finalText.filterMode = FilterMode.Point;
+
+        switch (_type)
+        {
+            case TerrainGenerationType.Basic:
+                _currentSettings = TerrainConfig.Basic;
+                _noise = BasicPerlinTexture();
+                finalText = _noise;
+            break;
+
+            case TerrainGenerationType.Rivers:
+                _currentSettings = TerrainConfig.RiversTerrain;
+                _noise = BasicPerlinTexture();
+                _riverNoise = RiversPerlinTexture();
+                BlendTextures(_noise, _riverNoise, ref finalText,BlendOperation.Sub);
+            break;
+            case TerrainGenerationType.Ridges:
+                _currentSettings = TerrainConfig.RiversTerrain;
+                _noise = BasicPerlinTexture();
+                _riverNoise = RiversPerlinTexture();
+                BlendTextures(_noise, _riverNoise, ref finalText,BlendOperation.Add);
+
+            break;
+        }
+        Color[] pixels = finalText.GetPixels();
+
+        int[,] levels = new int[GRID_SIZE, GRID_SIZE];
+        for (int x = 0; x < GRID_SIZE; x++)
+        {
+            for (int y = 0; y < GRID_SIZE; y++)
+            {
+                float height = pixels[y * GRID_SIZE + x].r;
+                levels[x, y] = Mathf.Clamp(Mathf.FloorToInt(height * 5), 0, 4);
+            }
+        }
+
+        if(Enforce2GapLimits) EnforceMaxSlope(levels, maxDifference: 2);
+
+        for (int x = 0; x < GRID_SIZE; x++)
+        {
+            for (int y = 0; y < GRID_SIZE; y++)
+            {
+                GroundStack g = Instantiate(_groundStack, grid.transform).GetComponent<GroundStack>();
+                g.transform.localPosition = new Vector3(x + _space * x, 0, y + _space * y);
+                g.Level = levels[x, y];
+            }
+        }
+    }
+
+    private void EnforceMaxSlope(int[,] gridLevels, int maxDifference = 2)
+    {
+        bool changed = true;
+        int maxPasses = GRID_SIZE * 2; //avoidnfinite loops
+        int pass = 0;
+
+        int[] dx = { 1, -1, 0, 0 };
+        int[] dy = { 0, 0, 1, -1 };
+
+        while (changed && pass < maxPasses)
+        {
+            changed = false;
+            pass++;
+
+            for (int x = 0; x < GRID_SIZE; x++)
+            {
+                for (int y = 0; y < GRID_SIZE; y++)
+                {
+                    int currentLevel = gridLevels[x, y];
+
+                    for (int dir = 0; dir < 4; dir++)
+                    {
+                        int nx = x + dx[dir];
+                        int ny = y + dy[dir];
+
+                        if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE)
+                        {
+                            int neighborLevel = gridLevels[nx, ny];
+
+                            if (currentLevel - neighborLevel > maxDifference)
+                            {
+                                gridLevels[nx, ny] = currentLevel - maxDifference;
+                                changed = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #region Blends
+
+    private void BlendTextures(Texture2D t1, Texture2D t2, ref Texture2D result, BlendOperation operationType = BlendOperation.Add )
+    {
+        Color[] P1 = t1.GetPixels();
+        Color[] P2 = t2.GetPixels();
+        Color[] r = new Color[P1.Length];
+
+        for (int i = 0; i < P1.Length; i++)
+        {
+            switch (operationType)
+            {
+                case BlendOperation.Add:
+                    r[i] = P1[i] + P2[i];
+                break;
+                case BlendOperation.Sub:
+                    r[i] = P1[i] - P2[i];
+                break;
+                case BlendOperation.Mult:
+                    r[i] = P1[i] * P2[i];
+                break;
+            }
+        }
+
+        result.SetPixels(r);
+    }
+
+    public enum BlendOperation{ Add, Sub, Mult }
+    #endregion
+
+    #region Perlins
+    Texture2D BasicPerlinTexture()
+    {
+        Texture2D texture = new Texture2D(GRID_SIZE, GRID_SIZE);
+        texture.filterMode = FilterMode.Point;
+        Color[] pixels = new Color[GRID_SIZE * GRID_SIZE];
+
+        for (int y = 0; y < 10; y++)
+        {
+            for (int x = 0; x < GRID_SIZE; x++)
+            {
+                float xCoord = (float)x / GRID_SIZE * _currentSettings.scale + seed;
+                float yCoord = (float)y / GRID_SIZE * _currentSettings.scale + seed;
+
+                float sample = Mathf.PerlinNoise(xCoord, yCoord);
+                pixels[y * GRID_SIZE + x] = new Color(sample, sample, sample);
+            }
+        }
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+        return texture;
+    }
+    Texture2D RiversPerlinTexture()
+    {
+        var _settings = (RiversTerrainConfig)_currentSettings;
+
+        Texture2D texture = new Texture2D(GRID_SIZE, GRID_SIZE);
+        texture.filterMode = FilterMode.Point;
+        
+        Color[] pixels = new Color[GRID_SIZE * GRID_SIZE];
+
+        float seedX = seed % 1000 * 0.137f;
+        float seedY = seed / 1000 % 1000 * 0.259f;
+
+        for (int y = 0; y < GRID_SIZE; y++)
+        {
+            for (int x = 0; x < GRID_SIZE; x++)
+            {
+                float xCoord = (float)x / GRID_SIZE * _settings.riverScale + seedX;
+                float yCoord = (float)y / GRID_SIZE * _settings.riverScale + seedY;
+
+                float rawNoise = Mathf.PerlinNoise(xCoord, yCoord);
+                float distFromCenter = Mathf.Abs(rawNoise - _settings.riverThreshold);
+
+                float riverDepth = 0f;
+
+                if (distFromCenter < _settings.riverWidth)
+                {
+                    float t = 1f - (distFromCenter / _settings.riverWidth);
+                    t = Mathf.SmoothStep(0f, 1f, t);
+                    riverDepth = Mathf.Lerp(_settings.halfStep, _settings.riverCarveDepth, t);
+                }
+                else if (distFromCenter < _settings.bankWidth)
+                {
+                    float t = (distFromCenter - _settings.riverWidth) / (_settings.bankWidth - _settings.riverWidth);
+                    t = Mathf.SmoothStep(0f, 1f, t);
+                    riverDepth = Mathf.Lerp(_settings.halfStep, 0f, t);
+                }
+
+                pixels[y * GRID_SIZE + x] = new Color(riverDepth, riverDepth, riverDepth, 1f);
+            }
+        }
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+        return texture;
+    }
+    #endregion
+}
+
+public enum TerrainGenerationType
+{
+    Basic,
+    Rivers,
+    Ridges,
+
+}
