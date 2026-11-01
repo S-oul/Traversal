@@ -70,15 +70,17 @@ public class DeepForestTerrainConfig : TerrainConfig
 {
     
     [Header("Forest Channel")]
-    public float pointScale;
-    public float pointFrequency;
+    public float noiseFrequency;
+    public float noiseCutoff;
+    public int knightModulo;
     
     public static DeepForestTerrainConfig DeepForest => new DeepForestTerrainConfig
     {
         scale = .2f,
         heightMultiplier = 1f,
 
-        pointScale = 32,
-        pointFrequency = .65f,
+        noiseFrequency = .4f,
+        noiseCutoff = .5f,
+        knightModulo = 5
     };
 }

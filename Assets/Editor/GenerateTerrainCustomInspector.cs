@@ -25,7 +25,7 @@ public class GenerateTerrainCustomInspector : Editor
             _refScript.Generate(Random.Range(-1000000,1000000));
         }
 
-        DrawPropertiesExcluding(serializedObject,"m_Script","_noise","_secondNoise","_currentSettings");
+        DrawPropertiesExcluding(serializedObject,"m_Script","_noise","_secondNoise","_currentSettings","_thirdNoise");
         DrawTexure(_refScript.Noise);
 
         switch(_refScript.Type)
@@ -41,7 +41,8 @@ public class GenerateTerrainCustomInspector : Editor
                 DrawTexure(_refScript.SecondNoise);            
             break;
             case TerrainGenerationType.DeepForest:
-                DrawTexure(_refScript.SecondNoise);            
+                DrawTexure(_refScript.SecondNoise);  
+                //DrawTexure(_refScript.ThirdNoise);          
             break;
         }
         using (new EditorGUI.DisabledScope(true))

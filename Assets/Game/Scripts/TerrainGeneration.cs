@@ -11,6 +11,7 @@ public class TerrainGeneration : MonoBehaviour
     [SerializeField] GameObject _groundStack;
     [SerializeField] private Texture2D _noise;
     [SerializeField] private Texture2D _secondNoise;
+    [SerializeField] private Texture2D _thirdNoise;
 
     GameObject grid = null;
 
@@ -21,11 +22,12 @@ public class TerrainGeneration : MonoBehaviour
     public Texture2D Noise { get => _noise; set => _noise = value; }
     public Texture2D SecondNoise { get => _secondNoise; set => _secondNoise = value; }
     public TerrainConfig CurrentSettings { get => _currentSettings; set => _currentSettings = value; }
+    public Texture2D ThirdNoise { get => _thirdNoise; set => _thirdNoise = value; }
 
 
-#endregion
+    #endregion
 
-#region Generation
+    #region Generation
     public void Generate(int newSeed)
     {
         _seed=newSeed;
@@ -66,7 +68,7 @@ public class TerrainGeneration : MonoBehaviour
                 _currentSettings = TerrainConfig.DeepForestTerrain;
                 _noise = BasicPerlinTexture();
                 _secondNoise = DotsPerlinTexture();
-                BlendTextures(_noise, _secondNoise, ref finalText,BlendOperation.Mult);
+                BlendTextures(_noise, _secondNoise, ref finalText,BlendOperation.Add);
             break;
 
         }
@@ -124,9 +126,9 @@ public class TerrainGeneration : MonoBehaviour
                         {
                             int neighborLevel = gridLevels[nx, ny];
 
-                            if (currentLevel - neighborLevel > maxDifference)
+                            if (currentLevel > neighborLevel + maxDifference)
                             {
-                                gridLevels[nx, ny] = currentLevel - maxDifference;
+                                gridLevels[x, y] = currentLevel - 1;
                                 changed = true;
                             }
                         }
@@ -216,19 +218,19 @@ public class TerrainGeneration : MonoBehaviour
                 float yCoord = (float)y / GRID_SIZE * _settings.riverScale + seedY;
 
                 float rawNoise = Mathf.PerlinNoise(xCoord, yCoord);
-                float distFromCenter = Mathf.Abs(rawNoise - _settings.riverThreshold);
+                float riversTreshold = Mathf.Abs(rawNoise - _settings.riverThreshold);
 
                 float riverDepth = 0f;
 
-                if (distFromCenter < _settings.riverWidth)
+                if (riversTreshold < _settings.riverWidth)
                 {
-                    float t = 1f - (distFromCenter / _settings.riverWidth);
+                    float t = 1f - (riversTreshold / _settings.riverWidth);
                     t = Mathf.SmoothStep(0f, 1f, t);
                     riverDepth = Mathf.Lerp(_settings.halfStep, _settings.riverCarveDepth, t);
                 }
-                else if (distFromCenter < _settings.bankWidth)
+                else if (riversTreshold < _settings.bankWidth)
                 {
-                    float t = (distFromCenter - _settings.riverWidth) / (_settings.bankWidth - _settings.riverWidth);
+                    float t = (riversTreshold - _settings.riverWidth) / (_settings.bankWidth - _settings.riverWidth);
                     t = Mathf.SmoothStep(0f, 1f, t);
                     riverDepth = Mathf.Lerp(_settings.halfStep, 0f, t);
                 }
@@ -261,19 +263,19 @@ public class TerrainGeneration : MonoBehaviour
                 float yCoord = (float)y / GRID_SIZE * _settings.ridgeScale + seedY;
 
                 float rawNoise = Mathf.PerlinNoise(xCoord, yCoord);
-                float distFromCenter = Mathf.Abs(rawNoise - _settings.ridgeThreshold);
+                float riversTreshHold = Mathf.Abs(rawNoise - _settings.ridgeThreshold);
 
                 float riverDepth = 0f;
 
-                if (distFromCenter < _settings.ridgeWidth)
+                if (riversTreshHold < _settings.ridgeWidth)
                 {
-                    float t = 1f - (distFromCenter / _settings.ridgeWidth);
+                    float t = 1f - (riversTreshHold / _settings.ridgeWidth);
                     t = Mathf.SmoothStep(0f, 1f, t);
                     riverDepth = Mathf.Lerp(_settings.halfStep, _settings.ridgeCarveDepth, t);
                 }
-                else if (distFromCenter < _settings.bankWidth)
+                else if (riversTreshHold < _settings.bankWidth)
                 {
-                    float t = (distFromCenter - _settings.ridgeWidth) / (_settings.bankWidth - _settings.ridgeWidth);
+                    float t = (riversTreshHold - _settings.ridgeWidth) / (_settings.bankWidth - _settings.ridgeWidth);
                     t = Mathf.SmoothStep(0f, 1f, t);
                     riverDepth = Mathf.Lerp(_settings.halfStep, 0f, t);
                 }
@@ -297,20 +299,29 @@ public class TerrainGeneration : MonoBehaviour
         float seedX = seed % 1000 * 0.137f;
         float seedY = seed / 1000 % 1000 * 0.259f;
 
+        for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.black;
+
+        int offsetX = Mathf.FloorToInt(seedX) % _settings.knightModulo;
+        int offsetY = Mathf.FloorToInt(seedY) % _settings.knightModulo;
+
         for (int y = 0; y < GRID_SIZE; y++)
         {
             for (int x = 0; x < GRID_SIZE; x++)
             {
-                float xCoord = (float)x / GRID_SIZE * _settings.pointScale + seedX;
-                float yCoord = (float)y / GRID_SIZE * _settings.pointScale + seedY;
+                float sampleX = (x * _settings.noiseFrequency) + seedX;
+                float sampleY = (y * _settings.noiseFrequency) + seedY;
+                float noise = Mathf.PerlinNoise(sampleX, sampleY);
 
-                float rawNoise = Mathf.PerlinNoise(xCoord, yCoord);
+                bool isBaseKnight = ((2 * (x + offsetX) + y + offsetY) % _settings.knightModulo) == 0;
 
-                float pointNoise = (rawNoise-.5f)*2f;
-
-                pointNoise *= 2;
-
-                pixels[y * GRID_SIZE + x] = new Color(pointNoise, pointNoise, pointNoise);
+                if (isBaseKnight && noise > _settings.noiseCutoff)
+                {
+                    pixels[y * GRID_SIZE + x] = Color.white;
+                }
+                else
+                {
+                    pixels[y * GRID_SIZE + x] = Color.black;
+                }
             }
         }
 
