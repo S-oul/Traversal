@@ -1,6 +1,6 @@
-using System;
 using UnityEngine;
 
+[System.Serializable]
 public class TerrainConfig
 {
     public float scale;
@@ -13,9 +13,11 @@ public class TerrainConfig
     };
 
     public static RiversTerrainConfig RiversTerrain => RiversTerrainConfig.Rivers;
-    //ridges 
+    public static RidgesTerrainConfig RidgesTerrain => RidgesTerrainConfig.Ridges;
+    public static DeepForestTerrainConfig DeepForestTerrain => DeepForestTerrainConfig.DeepForest;
 }
 
+[System.Serializable]
 public class RiversTerrainConfig : TerrainConfig
 {
     
@@ -33,9 +35,50 @@ public class RiversTerrainConfig : TerrainConfig
         heightMultiplier = 1f,
         riverScale = 1f,
         riverThreshold = 0.4f,
-        riverWidth = 0.05f,
-        bankWidth = 0.12f,
+        riverWidth = 0.04f,
+        bankWidth = 0.2f,
         riverCarveDepth = 0.6f,
         halfStep = .3f
+    };
+}
+
+[System.Serializable]
+public class RidgesTerrainConfig : TerrainConfig
+{
+    
+    [Header("Ridges Channel")]
+    public float ridgeScale;
+    public float ridgeThreshold;
+    public float ridgeWidth;
+    public float bankWidth;
+    public float ridgeCarveDepth;
+    public float halfStep;
+    
+    public static RidgesTerrainConfig Ridges => new RidgesTerrainConfig
+    {
+        scale = .2f,
+        heightMultiplier = 1f,
+        ridgeScale = 1f,
+        ridgeThreshold = 0.4f,
+        ridgeWidth = 0.05f,
+        bankWidth = 0.2f,
+        ridgeCarveDepth = 0.6f,
+        halfStep = .3f
+    };
+}
+public class DeepForestTerrainConfig : TerrainConfig
+{
+    
+    [Header("Forest Channel")]
+    public float pointScale;
+    public float pointFrequency;
+    
+    public static DeepForestTerrainConfig DeepForest => new DeepForestTerrainConfig
+    {
+        scale = .2f,
+        heightMultiplier = 1f,
+
+        pointScale = 32,
+        pointFrequency = .65f,
     };
 }

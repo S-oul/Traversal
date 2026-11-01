@@ -5,13 +5,12 @@ public class TerrainGeneration : MonoBehaviour
     private const int GRID_SIZE = 10;  
     public bool Enforce2GapLimits = true;
     [SerializeField] TerrainGenerationType _type;
-    [SerializeField] private TerrainConfig _currentSettings;
+    [SerializeReference] private TerrainConfig _currentSettings;
     [SerializeField] private int _seed = 0;
-    private float _space = 0.05f;
-    private float _scale = 3;
+    [SerializeField] private float _space = 0.0f;
     [SerializeField] GameObject _groundStack;
     [SerializeField] private Texture2D _noise;
-    [SerializeField] private Texture2D _riverNoise;
+    [SerializeField] private Texture2D _secondNoise;
 
     GameObject grid = null;
 
@@ -20,10 +19,13 @@ public class TerrainGeneration : MonoBehaviour
 #region Accessors
     public TerrainGenerationType Type { get => _type; set => _type = value; }
     public Texture2D Noise { get => _noise; set => _noise = value; }
-    public Texture2D RiverNoise { get => _riverNoise; set => _riverNoise = value; }
+    public Texture2D SecondNoise { get => _secondNoise; set => _secondNoise = value; }
+    public TerrainConfig CurrentSettings { get => _currentSettings; set => _currentSettings = value; }
 
 
 #endregion
+
+#region Generation
     public void Generate(int newSeed)
     {
         _seed=newSeed;
@@ -51,16 +53,22 @@ public class TerrainGeneration : MonoBehaviour
             case TerrainGenerationType.Rivers:
                 _currentSettings = TerrainConfig.RiversTerrain;
                 _noise = BasicPerlinTexture();
-                _riverNoise = RiversPerlinTexture();
-                BlendTextures(_noise, _riverNoise, ref finalText,BlendOperation.Sub);
+                _secondNoise = RiversPerlinTexture();
+                BlendTextures(_noise, _secondNoise, ref finalText,BlendOperation.Sub);
             break;
             case TerrainGenerationType.Ridges:
-                _currentSettings = TerrainConfig.RiversTerrain;
+                _currentSettings = TerrainConfig.RidgesTerrain;
                 _noise = BasicPerlinTexture();
-                _riverNoise = RiversPerlinTexture();
-                BlendTextures(_noise, _riverNoise, ref finalText,BlendOperation.Add);
-
+                _secondNoise = RidgesPerlinTexture();
+                BlendTextures(_noise, _secondNoise, ref finalText,BlendOperation.Add);
             break;
+            case TerrainGenerationType.DeepForest:
+                _currentSettings = TerrainConfig.DeepForestTerrain;
+                _noise = BasicPerlinTexture();
+                _secondNoise = DotsPerlinTexture();
+                BlendTextures(_noise, _secondNoise, ref finalText,BlendOperation.Mult);
+            break;
+
         }
         Color[] pixels = finalText.GetPixels();
 
@@ -128,7 +136,9 @@ public class TerrainGeneration : MonoBehaviour
         }
     }
 
-    #region Blends
+#endregion
+
+#region Blends
 
     private void BlendTextures(Texture2D t1, Texture2D t2, ref Texture2D result, BlendOperation operationType = BlendOperation.Add )
     {
@@ -155,10 +165,15 @@ public class TerrainGeneration : MonoBehaviour
         result.SetPixels(r);
     }
 
-    public enum BlendOperation{ Add, Sub, Mult }
+    public enum BlendOperation
+    { 
+        Add,
+        Sub,
+        Mult
+    }
     #endregion
 
-    #region Perlins
+#region Perlins
     Texture2D BasicPerlinTexture()
     {
         Texture2D texture = new Texture2D(GRID_SIZE, GRID_SIZE);
@@ -226,6 +241,84 @@ public class TerrainGeneration : MonoBehaviour
         texture.Apply();
         return texture;
     }
+    Texture2D RidgesPerlinTexture()
+    {
+        var _settings = (RidgesTerrainConfig)_currentSettings;
+
+        Texture2D texture = new Texture2D(GRID_SIZE, GRID_SIZE);
+        texture.filterMode = FilterMode.Point;
+        
+        Color[] pixels = new Color[GRID_SIZE * GRID_SIZE];
+
+        float seedX = seed % 1000 * 0.137f;
+        float seedY = seed / 1000 % 1000 * 0.259f;
+
+        for (int y = 0; y < GRID_SIZE; y++)
+        {
+            for (int x = 0; x < GRID_SIZE; x++)
+            {
+                float xCoord = (float)x / GRID_SIZE * _settings.ridgeScale + seedX;
+                float yCoord = (float)y / GRID_SIZE * _settings.ridgeScale + seedY;
+
+                float rawNoise = Mathf.PerlinNoise(xCoord, yCoord);
+                float distFromCenter = Mathf.Abs(rawNoise - _settings.ridgeThreshold);
+
+                float riverDepth = 0f;
+
+                if (distFromCenter < _settings.ridgeWidth)
+                {
+                    float t = 1f - (distFromCenter / _settings.ridgeWidth);
+                    t = Mathf.SmoothStep(0f, 1f, t);
+                    riverDepth = Mathf.Lerp(_settings.halfStep, _settings.ridgeCarveDepth, t);
+                }
+                else if (distFromCenter < _settings.bankWidth)
+                {
+                    float t = (distFromCenter - _settings.ridgeWidth) / (_settings.bankWidth - _settings.ridgeWidth);
+                    t = Mathf.SmoothStep(0f, 1f, t);
+                    riverDepth = Mathf.Lerp(_settings.halfStep, 0f, t);
+                }
+
+                pixels[y * GRID_SIZE + x] = new Color(riverDepth, riverDepth, riverDepth, 1f);
+            }
+        }
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+        return texture;
+    }
+    Texture2D DotsPerlinTexture()
+    {
+        Texture2D texture = new Texture2D(GRID_SIZE, GRID_SIZE);
+        texture.filterMode = FilterMode.Point;
+        Color[] pixels = new Color[GRID_SIZE * GRID_SIZE];
+        
+        var _settings = (DeepForestTerrainConfig)_currentSettings;
+
+        float seedX = seed % 1000 * 0.137f;
+        float seedY = seed / 1000 % 1000 * 0.259f;
+
+        for (int y = 0; y < GRID_SIZE; y++)
+        {
+            for (int x = 0; x < GRID_SIZE; x++)
+            {
+                float xCoord = (float)x / GRID_SIZE * _settings.pointScale + seedX;
+                float yCoord = (float)y / GRID_SIZE * _settings.pointScale + seedY;
+
+                float rawNoise = Mathf.PerlinNoise(xCoord, yCoord);
+
+                float pointNoise = (rawNoise-.5f)*2f;
+
+                pointNoise *= 2;
+
+                pixels[y * GRID_SIZE + x] = new Color(pointNoise, pointNoise, pointNoise);
+            }
+        }
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+        return texture;
+    }
+
     #endregion
 }
 
@@ -234,5 +327,7 @@ public enum TerrainGenerationType
     Basic,
     Rivers,
     Ridges,
+    DeepForest,
+
 
 }

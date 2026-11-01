@@ -5,10 +5,11 @@ using UnityEngine;
 public class GenerateTerrainCustomInspector : Editor
 {
     TerrainGeneration _refScript;
+    SerializedProperty ConfigProp;
     void OnEnable()
     {
         _refScript = (TerrainGeneration)target;
-        
+        ConfigProp = serializedObject.FindProperty("_currentSettings");
     }
     public override void OnInspectorGUI()
     {
@@ -24,12 +25,29 @@ public class GenerateTerrainCustomInspector : Editor
             _refScript.Generate(Random.Range(-1000000,1000000));
         }
 
-        DrawPropertiesExcluding(serializedObject,"m_Script","_noise","_riverNoise");
-
+        DrawPropertiesExcluding(serializedObject,"m_Script","_noise","_secondNoise","_currentSettings");
         DrawTexure(_refScript.Noise);
 
-        if(_refScript.Type == TerrainGenerationType.Rivers || _refScript.Type == TerrainGenerationType.Ridges){ DrawTexure(_refScript.RiverNoise);}
-
+        switch(_refScript.Type)
+        {
+            //to copy cat
+            case TerrainGenerationType.Basic:
+                
+            break;
+            case TerrainGenerationType.Rivers:
+                DrawTexure(_refScript.SecondNoise);
+            break;
+            case TerrainGenerationType.Ridges:
+                DrawTexure(_refScript.SecondNoise);            
+            break;
+            case TerrainGenerationType.DeepForest:
+                DrawTexure(_refScript.SecondNoise);            
+            break;
+        }
+        using (new EditorGUI.DisabledScope(true))
+        {
+            EditorGUILayout.PropertyField(ConfigProp, includeChildren: true);
+        }
         serializedObject.ApplyModifiedProperties();
     }
 
