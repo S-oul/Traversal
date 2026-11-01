@@ -17,7 +17,6 @@ public class TerrainConfig
     public static DeepForestTerrainConfig DeepForestTerrain => DeepForestTerrainConfig.DeepForest;
 }
 
-[System.Serializable]
 public class RiversTerrainConfig : TerrainConfig
 {
     
@@ -41,8 +40,6 @@ public class RiversTerrainConfig : TerrainConfig
         halfStep = .3f
     };
 }
-
-[System.Serializable]
 public class RidgesTerrainConfig : TerrainConfig
 {
     
