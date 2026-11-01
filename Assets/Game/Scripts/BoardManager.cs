@@ -8,6 +8,7 @@ namespace Game.Scripts
         [SerializeField] private TerrainGeneration generator; 
         [SerializeField] private List<GroundStack> board;
         [SerializeField] private List<Coordinate> coordinates;
+        [SerializeField] private List<PiecePosition> piecePositions;
 
         [SerializeField] private Player player1;
         [SerializeField] private Player player2;
@@ -39,6 +40,21 @@ namespace Game.Scripts
                     Debug.Log(stack.name + "'s position = " + coordinate.Position);
                 }
             }
+            
+            SetUpPiecePositions();
+        }
+        
+        private void SetUpPiecePositions()
+        {
+            piecePositions = new List<PiecePosition>();
+            for (int x = 0; x < _boardSize; x++)
+            {
+                for (int z = 0; z < _boardSize; z++)
+                {
+                    // PiecePosition piecePosition = new PiecePosition(piece, position);
+                    // piecePositions.Add(piecePosition);
+                }
+            }
         }
     }
     [System.Serializable]
@@ -53,6 +69,27 @@ namespace Game.Scripts
         public Coordinate(GroundStack groundStack, Vector3 position)
         {
             _groundStack = groundStack;
+            _position = position;
+        }
+    }
+
+    [System.Serializable]
+    public struct PiecePosition
+    {
+        Piece _piece;
+        Vector3 _position;
+        
+        public Piece piece { get => _piece; set => _piece = value; }
+
+        public Vector3 position
+        {
+            get => _position;
+            set => _position = value;
+        }
+
+        public PiecePosition(Piece piece, Vector3 position)
+        {
+            _piece = piece;
             _position = position;
         }
     }
