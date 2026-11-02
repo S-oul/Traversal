@@ -5,6 +5,7 @@ namespace Game.Scripts.Controls
 {
     public class PlayerController : MonoBehaviour
     {
+        private Outline outliner;
         public void OnLeftClick(InputAction.CallbackContext callbackContext)
         {
             if (callbackContext.performed)
@@ -17,15 +18,20 @@ namespace Game.Scripts.Controls
 
                 if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity, ~0))
                 {
-                    print(hitInfo.collider);
+                    if(outliner) outliner.enabled = false;
+                    outliner = hitInfo.collider.GetComponent<Outline>(); // New piece
+                    if(outliner) outliner.enabled = true;
                 }
             }
+            
         }
         
         public void OnRightClick(InputAction.CallbackContext callbackContext)
         {
             if (callbackContext.performed)
             {
+                if(outliner) outliner.enabled = false;
+                else print("tamere3");
                 Debug.Log("Right click performed");
             }
         }
