@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "name": "Aveugle",
+    "maps": [
+        {
+            "name": "Controller",
+            "id": "136549cb-8e57-4d19-96e2-7871c6708f99",
+            "actions": [
+                {
+                    "name": "SelectPiece",
+                    "type": "Button",
+                    "id": "ad27d1ba-6467-47d2-9c64-6061af61e2ba",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "UndoMove",
+                    "type": "Button",
+                    "id": "5ac0c0a9-d78d-4d29-8396-1f1be5fe64f2",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "8e38e36c-9d33-4159-bab9-2238a565dbb2",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SelectPiece",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "60fcad3a-6211-4b6e-93c7-b55f8cce99ad",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "UndoMove",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

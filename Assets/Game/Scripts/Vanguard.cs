@@ -4,7 +4,7 @@ namespace Game.Scripts
 {
     public class Vanguard : Piece
     {
-        [SerializeField] private int attack = 2;
-        [SerializeField] private int movementCount = 4;
+        public int Attack => 2;
+        public int MovementCount => 4;
     }
 }

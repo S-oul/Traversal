@@ -4,7 +4,7 @@ namespace Game.Scripts
 {
     public class Sentinel : Piece
     {
-        [SerializeField] private int attack = 3;
-        [SerializeField] private int movementCount = 3;
+        public int Attack => 3;
+        public int MovementCount => 3;
     }
 }

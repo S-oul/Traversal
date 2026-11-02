@@ -7,8 +7,8 @@ namespace Game.Scripts
     {
         [SerializeField] private TerrainGeneration generator; 
         [SerializeField] private List<GroundStack> board;
-        [SerializeField] private List<Coordinate> coordinates;
-        [SerializeField] private Dictionary<Piece, Coordinate> piecePositions;
+        [SerializeField] private List<Coordinate> _coordinates;
+        [SerializeField] private Dictionary<Piece, Coordinate> _piecePositions;
         [SerializeField] private Player player1;
         [SerializeField] private Player player2;
         
@@ -18,7 +18,19 @@ namespace Game.Scripts
         private int _boardSize = 10;
 
         public GameObject boardObject;
-        
+
+        public Dictionary<Piece, Coordinate> piecePositions
+        {
+            get => _piecePositions;
+            set => _piecePositions = value;
+        }
+
+        public List<Coordinate> coordinates
+        {
+            get => _coordinates;
+            set => _coordinates = value;
+        }
+
         private void Start()
         {
             SetUpBoard();
@@ -32,17 +44,17 @@ namespace Game.Scripts
             _team1 = player1.Team; // Print safe
             _team2 = player2.Team; // Print safe
             
-            Debug.Log(_team1.Count);
-            Debug.Log(_team2.Count);
+            // Debug.Log(_team1.Count);
+            // Debug.Log(_team2.Count);
             
             board.AddRange( boardObject.GetComponentsInChildren<GroundStack>());
             
             // Add coordinates to each cell
-            for (int x = 0; x < _boardSize; x++)
+            for (int z = 0; z < _boardSize; z++)
             {
-                for (int z = 0; z < _boardSize; z++)
+                for (int x = 0; x < _boardSize; x++)
                 {
-                    int index = x * _boardSize + z;
+                    int index = z * _boardSize + x;
         
                     GroundStack stack = board[index];
                     Coordinate coordinate = new Coordinate(stack, new Vector3(x, stack.Level, z));
@@ -116,7 +128,7 @@ namespace Game.Scripts
         {
             Piece piece = player.Team[pieceNumber];
             piecePositions.Add(piece, coordinate);
-            Debug.Log(piece.name + ", pos=" + coordinate.position);
+            // Debug.Log(piece.name + ", pos=" + coordinate.position);
             piece.transform.position = ToBoardCoordinate(piece, stack);
         }
 
