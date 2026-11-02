@@ -9,7 +9,8 @@ public class GroundStack : MonoBehaviour
     private int _level = 0;
 
     public GameObject _prefab;
-
+    
+    // Vector3 position ?
     public int Level { 
         get => _level;
         set
@@ -37,5 +38,10 @@ public class GroundStack : MonoBehaviour
         {
             transform.GetChild(i).gameObject.SetActive(i <= level? true: false);
         }
+    }
+
+    public int Top()
+    {
+        return Level + 1;
     }
 }

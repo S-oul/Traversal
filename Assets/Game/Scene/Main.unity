@@ -7635,7 +7635,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: bead4537f40f4004a91882dc8fa4508a, type: 2}
     - target: {fileID: 919132149155446097, guid: f45d8252628e6764ca5f44c4c70cf44c, type: 3}
       propertyPath: m_Name
-      value: Vanguard
+      value: P2Vanguard2
       objectReference: {fileID: 0}
     - target: {fileID: 1151388028547126963, guid: f45d8252628e6764ca5f44c4c70cf44c, type: 3}
       propertyPath: m_LocalScale.x
@@ -17006,7 +17006,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 1dcb43ff64f53074d9b0fa488af198b1, type: 2}
     - target: {fileID: 919132149155446097, guid: 4a6483b870fca5146ba0fbd2ece596ba, type: 3}
       propertyPath: m_Name
-      value: Sentinel
+      value: P1Sentinel1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -17038,7 +17038,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec88f67b5e6245e1ab72dbaee2a1b45d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Sentinel
-  attack: 0
+  attack: 3
   movementCount: 3
 --- !u!1 &713171104
 GameObject:
@@ -17646,7 +17646,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: bead4537f40f4004a91882dc8fa4508a, type: 2}
     - target: {fileID: 919132149155446097, guid: 4a6483b870fca5146ba0fbd2ece596ba, type: 3}
       propertyPath: m_Name
-      value: Sentinel
+      value: P2Sentinel1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -20131,7 +20131,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: bead4537f40f4004a91882dc8fa4508a, type: 2}
     - target: {fileID: 919132149155446097, guid: f45d8252628e6764ca5f44c4c70cf44c, type: 3}
       propertyPath: m_Name
-      value: Vanguard (1)
+      value: P2Vanguard1
       objectReference: {fileID: 0}
     - target: {fileID: 1151388028547126963, guid: f45d8252628e6764ca5f44c4c70cf44c, type: 3}
       propertyPath: m_LocalScale.x
@@ -26283,7 +26283,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 1dcb43ff64f53074d9b0fa488af198b1, type: 2}
     - target: {fileID: 919132149155446097, guid: af6a5de2d40dfad4a9f9f4063ad42df2, type: 3}
       propertyPath: m_Name
-      value: Explorator
+      value: P1Explorator2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -26315,7 +26315,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b321f4deff7b4132acb9c06dd8492d1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Explorator
-  attack: 0
+  attack: 1
   movementCount: 5
 --- !u!1 &1077428728
 GameObject:
@@ -26974,7 +26974,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: bead4537f40f4004a91882dc8fa4508a, type: 2}
     - target: {fileID: 919132149155446097, guid: af6a5de2d40dfad4a9f9f4063ad42df2, type: 3}
       propertyPath: m_Name
-      value: Explorator (1)
+      value: P2Explorator1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -27001,7 +27001,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b321f4deff7b4132acb9c06dd8492d1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Explorator
-  attack: 0
+  attack: 1
   movementCount: 5
 --- !u!1 &1095037401
 GameObject:
@@ -28172,10 +28172,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1139953009}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c5d44fcbe0e6492c892fdfaddbc992e2, type: 3}
+  m_Script: {fileID: 11500000, guid: ec88f67b5e6245e1ab72dbaee2a1b45d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Vanguard
-  attack: 0
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Sentinel
+  attack: 3
   movementCount: 3
 --- !u!1 &1145947040
 GameObject:
@@ -29331,6 +29331,7 @@ MonoBehaviour:
   generator: {fileID: 1314141449}
   board: []
   coordinates: []
+  piecePositions: []
   player1: {fileID: 1605416206}
   player2: {fileID: 2030846882}
 --- !u!1 &1190442702
@@ -30440,7 +30441,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: bead4537f40f4004a91882dc8fa4508a, type: 2}
     - target: {fileID: 919132149155446097, guid: 4a6483b870fca5146ba0fbd2ece596ba, type: 3}
       propertyPath: m_Name
-      value: Sentinel (1)
+      value: P2Sentinel2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -30464,10 +30465,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1167616537}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c5d44fcbe0e6492c892fdfaddbc992e2, type: 3}
+  m_Script: {fileID: 11500000, guid: ec88f67b5e6245e1ab72dbaee2a1b45d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Vanguard
-  attack: 0
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Sentinel
+  attack: 3
   movementCount: 3
 --- !u!1 &1251554631
 GameObject:
@@ -31357,7 +31358,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 1dcb43ff64f53074d9b0fa488af198b1, type: 2}
     - target: {fileID: 919132149155446097, guid: 4a6483b870fca5146ba0fbd2ece596ba, type: 3}
       propertyPath: m_Name
-      value: Sentinel (1)
+      value: P1Sentinel2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -31389,7 +31390,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec88f67b5e6245e1ab72dbaee2a1b45d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Sentinel
-  attack: 0
+  attack: 3
   movementCount: 3
 --- !u!1 &1284775895
 GameObject:
@@ -31598,7 +31599,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: bead4537f40f4004a91882dc8fa4508a, type: 2}
     - target: {fileID: 919132149155446097, guid: af6a5de2d40dfad4a9f9f4063ad42df2, type: 3}
       propertyPath: m_Name
-      value: Explorator
+      value: P2Explorator2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -31625,7 +31626,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b321f4deff7b4132acb9c06dd8492d1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Explorator
-  attack: 0
+  attack: 1
   movementCount: 5
 --- !u!1 &1298495554
 GameObject:
@@ -32563,7 +32564,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 1dcb43ff64f53074d9b0fa488af198b1, type: 2}
     - target: {fileID: 919132149155446097, guid: f45d8252628e6764ca5f44c4c70cf44c, type: 3}
       propertyPath: m_Name
-      value: Vanguard
+      value: P1Vanguard2
       objectReference: {fileID: 0}
     - target: {fileID: 1151388028547126963, guid: f45d8252628e6764ca5f44c4c70cf44c, type: 3}
       propertyPath: m_LocalScale.x
@@ -37790,12 +37791,12 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1072586461}
-  - {fileID: 2096612084}
   - {fileID: 713134959}
-  - {fileID: 1284593328}
-  - {fileID: 1334942057}
   - {fileID: 2135239850}
+  - {fileID: 2096612084}
+  - {fileID: 1072586461}
+  - {fileID: 1334942057}
+  - {fileID: 1284593328}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1605416206
@@ -37810,7 +37811,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09d8d52864684c21870ce203a75b9ba4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Player
-  team: []
+  team:
+  - {fileID: 713134961}
+  - {fileID: 2135239852}
+  - {fileID: 2096612086}
+  - {fileID: 1072586463}
+  - {fileID: 1334942059}
+  - {fileID: 1284593330}
 --- !u!1 &1606430580
 GameObject:
   m_ObjectHideFlags: 0
@@ -49484,12 +49491,12 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1298494058}
-  - {fileID: 1093162337}
   - {fileID: 726886136}
-  - {fileID: 1249844666}
-  - {fileID: 322170451}
   - {fileID: 824932187}
+  - {fileID: 1093162337}
+  - {fileID: 1298494058}
+  - {fileID: 322170451}
+  - {fileID: 1249844666}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2030846882
@@ -49504,7 +49511,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09d8d52864684c21870ce203a75b9ba4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Player
-  team: []
+  team:
+  - {fileID: 1139953010}
+  - {fileID: 1062788217}
+  - {fileID: 1093162338}
+  - {fileID: 1298494059}
+  - {fileID: 904206773}
+  - {fileID: 1249844667}
 --- !u!1 &2031480169
 GameObject:
   m_ObjectHideFlags: 0
@@ -50972,7 +50985,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 1dcb43ff64f53074d9b0fa488af198b1, type: 2}
     - target: {fileID: 919132149155446097, guid: af6a5de2d40dfad4a9f9f4063ad42df2, type: 3}
       propertyPath: m_Name
-      value: Explorator (1)
+      value: P1Explorator1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -51004,7 +51017,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b321f4deff7b4132acb9c06dd8492d1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Scripts.Explorator
-  attack: 0
+  attack: 1
   movementCount: 5
 --- !u!1 &2096964739
 GameObject:
@@ -51894,7 +51907,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 1dcb43ff64f53074d9b0fa488af198b1, type: 2}
     - target: {fileID: 919132149155446097, guid: f45d8252628e6764ca5f44c4c70cf44c, type: 3}
       propertyPath: m_Name
-      value: Vanguard (1)
+      value: P1Vanguard1
       objectReference: {fileID: 0}
     - target: {fileID: 1151388028547126963, guid: f45d8252628e6764ca5f44c4c70cf44c, type: 3}
       propertyPath: m_LocalScale.x
