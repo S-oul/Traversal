@@ -32,7 +32,6 @@ namespace Game.Scripts
             coordinates = new List<Coordinate>();
             piecePositions = new List<PiecePosition>();
             piecePositions2 = new Dictionary<Piece, Coordinate>();
-            _boardSize = generator.gridSize;
             
             _team1 = player1.Team; // Print safe
             _team2 = player2.Team; // Print safe
