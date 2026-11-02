@@ -28,6 +28,12 @@ public class GenerateTerrainCustomInspector : Editor
         DrawPropertiesExcluding(serializedObject,"m_Script","_noise","_secondNoise","_currentSettings","_thirdNoise");
         DrawTexure(_refScript.Noise);
 
+        float min = float.MaxValue;
+        foreach(Color c in _refScript.Noise.GetPixels())
+        {
+            min =Mathf.Min(min,c.r);
+        }
+
         switch(_refScript.Type)
         {
             //to copy cat
@@ -47,6 +53,7 @@ public class GenerateTerrainCustomInspector : Editor
         }
         using (new EditorGUI.DisabledScope(true))
         {
+            //EditorGUILayout.PropertyField(ConfigProp.GetType())
             EditorGUILayout.PropertyField(ConfigProp, includeChildren: true);
         }
         serializedObject.ApplyModifiedProperties();

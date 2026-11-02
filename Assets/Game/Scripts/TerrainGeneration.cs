@@ -1,9 +1,13 @@
+using NUnit.Framework;
 using UnityEngine;
 
 public class TerrainGeneration : MonoBehaviour
 {
-    private const int GRID_SIZE = 10;  
+    private const int GRID_SIZE = 10;
+    private const int MAX_GRID_HEIGHT = 17;
+
     public bool Enforce2GapLimits = true;
+    public bool EnforceMinimumHeigh = true;
     [SerializeField] TerrainGenerationType _type;
     [SerializeReference] private TerrainConfig _currentSettings;
     [SerializeField] private int _seed = 0;
@@ -25,9 +29,9 @@ public class TerrainGeneration : MonoBehaviour
     public Texture2D ThirdNoise { get => _thirdNoise; set => _thirdNoise = value; }
 
 
-    #endregion
+#endregion
 
-    #region Generation
+#region Generation
     public void Generate(int newSeed)
     {
         _seed=newSeed;
@@ -79,12 +83,14 @@ public class TerrainGeneration : MonoBehaviour
         {
             for (int y = 0; y < GRID_SIZE; y++)
             {
-                float height = pixels[y * GRID_SIZE + x].r;
-                levels[x, y] = Mathf.Clamp(Mathf.FloorToInt(height * 5), 0, 4);
+                float height = Mathf.Max(0,pixels[y * GRID_SIZE + x].r);
+
+                levels[x, y] = Mathf.FloorToInt(Mathf.Lerp(1,MAX_GRID_HEIGHT * (_currentSettings.heightMultiplier/3/*Way to high horrible*/),height));
             }
         }
 
-        if(Enforce2GapLimits) EnforceMaxSlope(levels, maxDifference: 2);
+        if(Enforce2GapLimits) EnforceMaxSlope(ref levels, maxDifference: 2);
+        if(EnforceMinimumHeigh) EnforceMinimumGround(ref levels);
 
         for (int x = 0; x < GRID_SIZE; x++)
         {
@@ -96,8 +102,29 @@ public class TerrainGeneration : MonoBehaviour
             }
         }
     }
-
-    private void EnforceMaxSlope(int[,] gridLevels, int maxDifference = 2)
+    private void EnforceMinimumGround(ref int[,] gridLevels)
+    {
+        int minimumLevel = int.MaxValue;
+        for (int x = 0; x < GRID_SIZE; x++){
+            for (int y = 0; y < GRID_SIZE; y++)
+            {
+                int currentLevel = gridLevels[x, y];
+                minimumLevel = Mathf.Min(currentLevel,minimumLevel);
+            }
+        }
+        if(minimumLevel > 1)
+        {
+            int shiftDown = minimumLevel - 1;
+            for (int x = 0; x < GRID_SIZE; x++)
+            {
+                for (int y = 0; y < GRID_SIZE; y++)
+                {
+                    gridLevels[x, y] -= shiftDown;
+                }
+            }
+        }
+    }
+    private void EnforceMaxSlope(ref int[,] gridLevels, int maxDifference = 2)
     {
         bool changed = true;
         int maxPasses = GRID_SIZE * 2; //avoidnfinite loops
@@ -111,8 +138,7 @@ public class TerrainGeneration : MonoBehaviour
             changed = false;
             pass++;
 
-            for (int x = 0; x < GRID_SIZE; x++)
-            {
+            for (int x = 0; x < GRID_SIZE; x++) {
                 for (int y = 0; y < GRID_SIZE; y++)
                 {
                     int currentLevel = gridLevels[x, y];
@@ -175,14 +201,14 @@ public class TerrainGeneration : MonoBehaviour
     }
     #endregion
 
-#region Perlins
+#region Textures
     Texture2D BasicPerlinTexture()
     {
         Texture2D texture = new Texture2D(GRID_SIZE, GRID_SIZE);
         texture.filterMode = FilterMode.Point;
         Color[] pixels = new Color[GRID_SIZE * GRID_SIZE];
 
-        for (int y = 0; y < 10; y++)
+        for (int y = 0; y < GRID_SIZE; y++)
         {
             for (int x = 0; x < GRID_SIZE; x++)
             {
@@ -330,7 +356,8 @@ public class TerrainGeneration : MonoBehaviour
         return texture;
     }
 
-    #endregion
+#endregion
+
 }
 
 public enum TerrainGenerationType

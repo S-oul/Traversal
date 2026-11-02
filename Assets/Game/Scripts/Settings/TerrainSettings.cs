@@ -8,7 +8,7 @@ public class TerrainConfig
 
     public static TerrainConfig Basic => new TerrainConfig
     {
-        scale = 3f,
+        scale = 1.6f,
         heightMultiplier = 1f,
     };
 

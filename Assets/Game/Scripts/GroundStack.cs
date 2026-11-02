@@ -4,8 +4,9 @@ using UnityEngine;
 public class GroundStack : MonoBehaviour
 {
     private const float SPACE_BETWEEN_TILES = 0.25f;
+    private const int MAX_LEVEL = 30;
 
-    [SerializeField][Range(0,4)]
+    [SerializeField][Range(0,MAX_LEVEL)]
     private int _level = 0;
 
     public GameObject _prefab;
@@ -22,20 +23,11 @@ public class GroundStack : MonoBehaviour
         }
     }
 
-    void Awake()
-    {
-        if(transform.childCount > 1) return;
-
-        for(int i = 0; i < 5; i++)
-        {
-            Instantiate(_prefab,new Vector3(0,i*SPACE_BETWEEN_TILES,0),Quaternion.identity,transform).SetActive(i <= _level? true: false);
-        }
-    }
     void OnLevelChanged(int level)
     {
-        for(int i = 0; i < 5; i++)
+        for(int i = 0; i < level; i++)
         {
-            transform.GetChild(i).gameObject.SetActive(i <= level? true: false);
+            Instantiate(_prefab,new Vector3(transform.position.x,i*SPACE_BETWEEN_TILES,transform.position.z),Quaternion.identity,transform);
         }
     }
 }
