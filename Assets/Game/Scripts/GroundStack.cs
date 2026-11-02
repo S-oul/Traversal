@@ -35,6 +35,6 @@ public class GroundStack : MonoBehaviour
     public float Top()
     {
         if(Level == 0) return SPACE_BETWEEN_TILES;
-        return Level * SPACE_BETWEEN_TILES;
+        return (Level - 1) * SPACE_BETWEEN_TILES;
     }
 }

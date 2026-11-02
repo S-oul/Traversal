@@ -1,3 +1,4 @@
+using Game.Scripts;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -16,8 +17,8 @@ public class TerrainGeneration : MonoBehaviour
     [SerializeField] private Texture2D _noise;
     [SerializeField] private Texture2D _secondNoise;
     [SerializeField] private Texture2D _thirdNoise;
-
-    GameObject grid = null;
+    [SerializeField] private BoardManager _boardManager;
+    GameObject board = null;
 
     public int seed => _seed;
 
@@ -39,12 +40,13 @@ public class TerrainGeneration : MonoBehaviour
     }
     public void Generate()
     {
-        if(grid != null) DestroyImmediate(grid);
+        if(board != null) DestroyImmediate(board);
 
-        grid = new GameObject("Grid");
-        //grid.transform.SetParent(transform,false);
+        board = new GameObject("Board");
+        //board.transform.SetParent(transform,false);
+
+        _boardManager.boardObject = board;
         
-
         Texture2D finalText = new Texture2D(GRID_SIZE,GRID_SIZE);
         finalText.filterMode = FilterMode.Point;
 
@@ -96,7 +98,7 @@ public class TerrainGeneration : MonoBehaviour
         {
             for (int y = 0; y < GRID_SIZE; y++)
             {
-                GroundStack g = Instantiate(_groundStack, grid.transform).GetComponent<GroundStack>();
+                GroundStack g = Instantiate(_groundStack, board.transform).GetComponent<GroundStack>();
                 g.transform.localPosition = new Vector3(x + _space * x, 0, y + _space * y);
                 g.Level = levels[x, y];
             }
