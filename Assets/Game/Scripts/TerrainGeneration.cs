@@ -85,6 +85,14 @@ public class TerrainGeneration : MonoBehaviour
                 _secondNoise = DotsPerlinTexture();
                 BlendTextures(_noise, _secondNoise, ref finalText,BlendOperation.Add);
             break;
+            case TerrainGenerationType.Everest:
+                _currentSettings = TerrainConfig.EverestTerrain;
+                _noise = CircleTexture();
+                //BlendTextures(_noise, _noise, ref finalText,BlendOperation.Inverse);
+                //failed attemps 
+                finalText = _noise;
+            break;
+
 
         }
         Color[] pixels = finalText.GetPixels();
@@ -139,7 +147,7 @@ public class TerrainGeneration : MonoBehaviour
     private void EnforceMaxSlope(ref int[,] gridLevels, int maxDifference = 2)
     {
         bool changed = true;
-        int maxPasses = GRID_SIZE * 2; //avoidnfinite loops
+        int maxPasses = GRID_SIZE * 10; //avoidnfinite loops
         int pass = 0;
 
         int[] dx = { 1, -1, 0, 0 };
@@ -199,6 +207,9 @@ public class TerrainGeneration : MonoBehaviour
                 case BlendOperation.Mult:
                     r[i] = P1[i] * P2[i];
                 break;
+                case BlendOperation.Inverse:
+                    r[i] = P1[i]*-1;
+                break;
             }
         }
 
@@ -209,7 +220,8 @@ public class TerrainGeneration : MonoBehaviour
     { 
         Add,
         Sub,
-        Mult
+        Mult,
+        Inverse,
     }
     #endregion
 
@@ -367,6 +379,52 @@ public class TerrainGeneration : MonoBehaviour
         texture.Apply();
         return texture;
     }
+    Texture2D CircleTexture()
+    {
+        Texture2D texture = new Texture2D(GRID_SIZE, GRID_SIZE);
+        texture.filterMode = FilterMode.Point;
+        Color[] pixels = new Color[GRID_SIZE * GRID_SIZE];
+
+        Vector2 center = new Vector2((GRID_SIZE - 1) * 0.5f, (GRID_SIZE - 1) * 0.5f);
+    
+        float maxRadius = (GRID_SIZE +2) * 0.5f;
+
+        for (int y = 0; y < GRID_SIZE; y++)
+        {
+            for (int x = 0; x < GRID_SIZE; x++)
+            {
+                float dist = Vector2.Distance(new Vector2(x, y), center);
+
+                float value = Mathf.Clamp01(1.0f - (dist / maxRadius));
+
+                pixels[y * GRID_SIZE + x] = new Color(value, value, value);
+            }
+        }
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+        return texture;
+    }
+
+    // TO COPY CAT
+    // Texture2D BASETexture()
+    // {
+    //     Texture2D texture = new Texture2D(GRID_SIZE, GRID_SIZE);
+    //     texture.filterMode = FilterMode.Point;
+    //     Color[] pixels = new Color[GRID_SIZE * GRID_SIZE];
+
+    //     for (int y = 0; y < GRID_SIZE; y++)
+    //     {
+    //         for (int x = 0; x < GRID_SIZE; x++)
+    //         {
+    //             pixels[y * GRID_SIZE + x] = Color.white;
+    //         }
+    //     }
+
+    //     texture.SetPixels(pixels);
+    //     texture.Apply();
+    //     return texture;
+    // }
 
 #endregion
 
@@ -378,6 +436,6 @@ public enum TerrainGenerationType
     Rivers,
     Ridges,
     DeepForest,
-
+    Everest,
 
 }
