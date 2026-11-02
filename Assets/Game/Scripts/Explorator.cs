@@ -1,10 +1,11 @@
-﻿namespace Game.Scripts
+﻿using UnityEngine;
+
+namespace Game.Scripts
 {
     public class Explorator : Piece
     {
-        public override void Move()
-        {
-            throw new System.NotImplementedException();
-        }
+        [SerializeField] private int attack = 1;
+        [SerializeField] private int movementCount = 5;
+        
     }
 }

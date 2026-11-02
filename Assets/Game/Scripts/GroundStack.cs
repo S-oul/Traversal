@@ -10,7 +10,8 @@ public class GroundStack : MonoBehaviour
     private int _level = 0;
 
     public GameObject _prefab;
-
+    
+    // Vector3 position ?
     public int Level { 
         get => _level;
         set
@@ -29,5 +30,11 @@ public class GroundStack : MonoBehaviour
         {
             Instantiate(_prefab,new Vector3(transform.position.x,i*SPACE_BETWEEN_TILES,transform.position.z),Quaternion.identity,transform);
         }
+    }
+
+    public float Top()
+    {
+        if(Level == 0) return SPACE_BETWEEN_TILES;
+        return Level * SPACE_BETWEEN_TILES;
     }
 }

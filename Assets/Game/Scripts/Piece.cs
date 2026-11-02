@@ -1,14 +1,35 @@
+using System;
 using UnityEngine;
 
 namespace Game.Scripts
 {
     public abstract class Piece : MonoBehaviour
     {
-        private string name;
-        private int movementCount;
-        private int attack;
         // private int defense = attack + height + allies;
+        private int movementCount;
 
-        public abstract void Move();
+        [SerializeField] private BoardManager boardManager;
+        
+        public void Move()
+        {
+            
+        }
+        
+        public string AlgebraicNotation()
+        {
+            return "";
+        }
+
+        public void toAlphabet()
+        {
+        }
+
+        public float GetMidHeight()
+        {
+            return GetComponent<Collider>().bounds.size.y/2;
+        }
+        
     }
+    
+    
 }

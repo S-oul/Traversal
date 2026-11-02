@@ -1,10 +1,10 @@
-﻿namespace Game.Scripts
+﻿using UnityEngine;
+
+namespace Game.Scripts
 {
     public class Sentinel : Piece
     {
-        public override void Move()
-        {
-            throw new System.NotImplementedException();
-        }
+        [SerializeField] private int attack = 3;
+        [SerializeField] private int movementCount = 3;
     }
 }
