@@ -40,9 +40,18 @@ public class TerrainGeneration : MonoBehaviour
     }
     public void Generate()
     {
-        if(board != null) DestroyImmediate(board);
+        if(board != null)
+        {
+            DestroyImmediate(board);
+        } 
+        board = GameObject.FindGameObjectWithTag("Board");
+        if(board != null)
+        {
+            DestroyImmediate(board);
+        } //quickfix to remove
 
         board = new GameObject("Board");
+        board.tag = "Board";
         //board.transform.SetParent(transform,false);
 
         _boardManager.boardObject = board;
@@ -103,6 +112,7 @@ public class TerrainGeneration : MonoBehaviour
                 g.Level = levels[x, y];
             }
         }
+        _boardManager.SetUpBoard();
     }
     private void EnforceMinimumGround(ref int[,] gridLevels)
     {

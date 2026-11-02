@@ -21,6 +21,10 @@ namespace Game.Scripts
         
         private void Start()
         {
+            SetUpBoard();
+        }
+        public void SetUpBoard()
+        {
             board = new List<GroundStack>();
             coordinates = new List<Coordinate>();
             piecePositions = new Dictionary<Piece, Coordinate>();
