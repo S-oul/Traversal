@@ -6,9 +6,5 @@ namespace Game.Scripts
     {
         [SerializeField] private int attack = 2;
         [SerializeField] private int movementCount = 4;
-        public override void Move()
-        {
-            throw new System.NotImplementedException();
-        }
     }
 }

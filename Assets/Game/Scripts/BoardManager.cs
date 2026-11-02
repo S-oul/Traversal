@@ -8,8 +8,10 @@ namespace Game.Scripts
         [SerializeField] private TerrainGeneration generator; 
         [SerializeField] private List<GroundStack> board;
         [SerializeField] private List<Coordinate> coordinates;
-        [SerializeField] private List<PiecePosition> piecePositions;
+        [SerializeField] private List<PiecePosition> piecePositions1;
 
+        [SerializeField] private Dictionary<Piece, Coordinate> piecePositions2;
+        
         [SerializeField] private Player player1;
         [SerializeField] private Player player2;
         
@@ -17,12 +19,19 @@ namespace Game.Scripts
         private List<Piece> _team2 = new();
         
         private int _boardSize;
+
+        public List<PiecePosition> piecePositions
+        {
+            get => piecePositions1;
+            set => piecePositions1 = value;
+        }
+
         private void Start()
         {
             board = new List<GroundStack>();
             coordinates = new List<Coordinate>();
             piecePositions = new List<PiecePosition>();
-            
+            piecePositions2 = new Dictionary<Piece, Coordinate>();
             _boardSize = generator.gridSize;
             
             _team1 = player1.Team; // Print safe
@@ -43,97 +52,81 @@ namespace Game.Scripts
                     Coordinate coordinate = new Coordinate(stack, new Vector3(x, stack.Level, z));
                     coordinates.Add(coordinate);
                     
+                    // Set up pieces of both teams on the board
                     if(coordinate.position == new Vector3(0, stack.Level, 9)) Debug.Log("-----------------------------" + player1.name + "-----------------------------");
                     
                     if (coordinate.position == new Vector3(9, stack.Level, 2))
                     {
-                        PiecePosition p = new PiecePosition(player1.Team[0], coordinate);
-                        piecePositions.Add(p);
-                        Debug.Log(p.piece.name + ", pos=" + p.coordinateOnBoard.position);
+                        SetUpPiecePositions(player1, 0, coordinate, stack);
+                        
                     }
                     if (coordinate.position == new Vector3(9, stack.Level, 3))
                     {
-                        PiecePosition p = new PiecePosition(player1.Team[1], coordinate);
-                        piecePositions.Add(p);
-                        Debug.Log(p.piece.name + ", pos=" + p.coordinateOnBoard.position);
+                        SetUpPiecePositions(player1, 1, coordinate, stack);
                     }
                     if (coordinate.position == new Vector3(9, stack.Level, 4))
                     {
-                        PiecePosition p = new PiecePosition(player1.Team[2], coordinate);
-                        piecePositions.Add(p);
-                        Debug.Log(p.piece.name + ", pos=" + p.coordinateOnBoard.position);
+                        SetUpPiecePositions(player1, 2, coordinate, stack);
                     }
                     if(coordinate.position == new Vector3(9, stack.Level, 5))
                     {
-                        PiecePosition p = new PiecePosition(player1.Team[3], coordinate);
-                        piecePositions.Add(p);
-                        Debug.Log(p.piece.name + ", pos=" + p.coordinateOnBoard.position);
+                        SetUpPiecePositions(player1, 3, coordinate, stack);
                     }
                     if(coordinate.position == new Vector3(9, stack.Level, 6))
                     {
-                        PiecePosition p = new PiecePosition(player1.Team[4], coordinate);
-                        piecePositions.Add(p);
-                        Debug.Log(p.piece.name + ", pos=" + p.coordinateOnBoard.position);
+                        SetUpPiecePositions(player1, 4, coordinate, stack);
+
                     }
                     if(coordinate.position == new Vector3(9, stack.Level, 7))
                     {
-                        PiecePosition p = new PiecePosition(player1.Team[5], coordinate);
-                        piecePositions.Add(p);
-                        Debug.Log(p.piece.name + ", pos=" + p.coordinateOnBoard.position);
+                        SetUpPiecePositions(player1, 5, coordinate, stack);
+
                     }
                     
                     if(coordinate.position == new Vector3(0, stack.Level, 0)) Debug.Log("-----------------------------" + player2.name + "-----------------------------");
 
                     if (coordinate.position == new Vector3(0, stack.Level, 2))
                     {
-                        PiecePosition p = new PiecePosition(player2.Team[0], coordinate);
-                        piecePositions.Add(p);
-                        Debug.Log(p.piece.name + ", pos=" + p.coordinateOnBoard.position);
+                        SetUpPiecePositions(player2, 0, coordinate, stack);
                     }
                     if (coordinate.position == new Vector3(0, stack.Level, 3))
                     {
-                        PiecePosition p = new PiecePosition(player2.Team[1], coordinate);
-                        piecePositions.Add(p);
-                        Debug.Log(p.piece.name + ", pos=" + p.coordinateOnBoard.position);
+                        SetUpPiecePositions(player2, 1, coordinate, stack);
+                        
                     }
                     if (coordinate.position == new Vector3(0, stack.Level, 4))
                     {
-                        PiecePosition p = new PiecePosition(player2.Team[2], coordinate);
-                        piecePositions.Add(p);
-                        Debug.Log(p.piece.name + ", pos=" + p.coordinateOnBoard.position);
+                        SetUpPiecePositions(player2, 2, coordinate, stack);
                     }
                     if(coordinate.position == new Vector3(0, stack.Level, 5))
                     {
-                        PiecePosition p = new PiecePosition(player2.Team[3], coordinate);
-                        piecePositions.Add(p);
-                        Debug.Log(p.piece.name + ", pos=" + p.coordinateOnBoard.position);
+                        SetUpPiecePositions(player2, 3, coordinate, stack);
                     }
                     if(coordinate.position == new Vector3(0, stack.Level, 6))
                     {
-                        PiecePosition p = new PiecePosition(player2.Team[4], coordinate);
-                        piecePositions.Add(p);
-                        Debug.Log(p.piece.name + ", pos=" + p.coordinateOnBoard.position);
+                        SetUpPiecePositions(player2, 4, coordinate, stack);
                     }
-                    if(coordinate.position == new Vector3(0, stack.Level, 7))
+
+                    if (coordinate.position == new Vector3(0, stack.Level, 7))
                     {
-                        PiecePosition p = new PiecePosition(player2.Team[5], coordinate);
-                        piecePositions.Add(p);
-                        Debug.Log(p.piece.name + ", pos=" + p.coordinateOnBoard.position);
+                        SetUpPiecePositions(player2, 5, coordinate, stack);
                     }
                 }
             }
-            
-            // Set up pieces of both team on the board
-            SetUpPiecePosition();
-
-            SetUpPiecePosition();
         }
 
-        private void SetUpPiecePosition()
+        private void SetUpPiecePositions(Player player, int pieceNumber, Coordinate coordinate, GroundStack stack)
         {
-           
+            Piece piece = player.Team[pieceNumber];
+            piecePositions2.Add(piece, coordinate);
+            Debug.Log(piece.name + ", pos=" + coordinate.position);
+            piece.transform.position = ToBoardCoordinate(piece, stack);
         }
-        
+
+        private Vector3 ToBoardCoordinate(Piece piece, GroundStack stack)
+        {
+            return new Vector3(stack.transform.position.x, stack.Top() + piece.GetMidHeight(), stack.transform.position.z);
+        }
     }
     [System.Serializable]
     public struct Coordinate
