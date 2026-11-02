@@ -15,6 +15,10 @@ public class TerrainConfig
     public static RiversTerrainConfig RiversTerrain => RiversTerrainConfig.Rivers;
     public static RidgesTerrainConfig RidgesTerrain => RidgesTerrainConfig.Ridges;
     public static DeepForestTerrainConfig DeepForestTerrain => DeepForestTerrainConfig.DeepForest;
+    public static EverestTerrainConfig EverestTerrain => EverestTerrainConfig.Everest;
+    
+
+
 }
 
 public class RiversTerrainConfig : TerrainConfig
@@ -81,3 +85,15 @@ public class DeepForestTerrainConfig : TerrainConfig
         knightModulo = 5
     };
 }
+public class EverestTerrainConfig : TerrainConfig
+{
+    public static EverestTerrainConfig Everest => new EverestTerrainConfig
+        {
+            scale = 1f,
+            heightMultiplier = 10f,
+        };
+}
+
+
+
+
