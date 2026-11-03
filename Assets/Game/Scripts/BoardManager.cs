@@ -16,9 +16,11 @@ namespace Game.Scripts
         private List<Piece> _team2 = new();
         
         private int _boardSize = 10;
-
         public GameObject boardObject;
-
+        
+        [SerializeField] private GameObject circlePrefab;
+        private List<GameObject> circlePreFabs;
+        
         public Dictionary<Piece, Coordinate> piecePositions
         {
             get => _piecePositions;
@@ -33,6 +35,15 @@ namespace Game.Scripts
 
         private void Start()
         {
+            GameObject container = new GameObject("CirclesContainer"); 
+            circlePreFabs = new List<GameObject>();
+            for (int i = 0; i <= 60; i++)
+            {
+                GameObject circle = Instantiate(circlePrefab, new Vector3(-100, 0, -100), Quaternion.identity);
+                circle.SetActive(false);
+                circle.transform.SetParent(container.transform);
+                circlePreFabs.Add(circle);
+            }
             SetUpBoard();
         }
         public void SetUpBoard()
@@ -77,7 +88,7 @@ namespace Game.Scripts
                     {
                         SetUpPiecePositions(player1, 2, coordinate, stack);
                     }
-                    if(coordinate.position == new Vector3(9, stack.Level, 5))
+                    if(coordinate.position == new Vector3(5, stack.Level, 5)) // Please change to (9,y,5)
                     {
                         SetUpPiecePositions(player1, 3, coordinate, stack);
                     }
@@ -86,12 +97,13 @@ namespace Game.Scripts
                         SetUpPiecePositions(player1, 4, coordinate, stack);
 
                     }
-                    if(coordinate.position == new Vector3(9, stack.Level, 7))
+
+                    if (coordinate.position == new Vector3(9, stack.Level, 7))
                     {
                         SetUpPiecePositions(player1, 5, coordinate, stack);
 
                     }
-                    
+
                     if(coordinate.position == new Vector3(0, stack.Level, 0)) Debug.Log("-----------------------------" + player2.name + "-----------------------------");
 
                     if (coordinate.position == new Vector3(0, stack.Level, 2))
