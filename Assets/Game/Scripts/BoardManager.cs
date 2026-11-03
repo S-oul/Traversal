@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Game.Scripts
@@ -37,9 +38,9 @@ namespace Game.Scripts
         {
             GameObject container = new GameObject("CirclesContainer"); 
             circlePreFabs = new List<GameObject>();
-            for (int i = 0; i <= 60; i++)
+            for (int i = 0; i <= 200; i++)
             {
-                GameObject circle = Instantiate(circlePrefab, new Vector3(-100, 0, -100), Quaternion.identity);
+                GameObject circle = Instantiate(circlePrefab, new Vector3(-100, 0, -100), Quaternion.Euler(90,0,0));
                 circle.SetActive(false);
                 circle.transform.SetParent(container.transform);
                 circlePreFabs.Add(circle);
@@ -141,12 +142,54 @@ namespace Game.Scripts
             Piece piece = player.Team[pieceNumber];
             piecePositions.Add(piece, coordinate);
             // Debug.Log(piece.name + ", pos=" + coordinate.position);
-            piece.transform.position = ToBoardCoordinate(piece, stack);
+            piece.transform.position = ToBoardCoordinatePiece(piece, stack);
         }
 
-        private Vector3 ToBoardCoordinate(Piece piece, GroundStack stack)
+        public Vector3 ToBoardCoordinatePiece(Piece piece, GroundStack stack)
         {
             return new Vector3(stack.transform.position.x, stack.Top() + piece.GetMidHeight(), stack.transform.position.z);
+        }
+        
+        public Vector3 ToBoardCoordinate(GroundStack stack)
+        {
+            return new Vector3(stack.transform.position.x, stack.Top() + 1, stack.transform.position.z);
+        }
+
+        public void PlaceCircles(Piece piece)
+        {
+            Coordinate pieceCoordinate = piecePositions[piece];
+            int index = 0;
+            
+            for(int z = 0; z < _boardSize; z++)
+            {
+                for(int x = 0; x < _boardSize; x++)
+                {
+                    float distance = Mathf.Abs(x - pieceCoordinate.position.x) + Mathf.Abs(z - pieceCoordinate.position.z);
+                    if (distance <= piece.MovementCount)
+                    {
+                        print(
+                            "Distance=" + distance);
+                        GroundStack stack = board[z * _boardSize + x];
+                        circlePreFabs[index].transform.position = ToBoardCoordinate(stack);
+                        circlePreFabs[index].gameObject.SetActive(true);
+                        index++;
+                    }
+                                        
+                }
+            }
+        }
+
+        public void HideCircles()
+        {
+            foreach(GameObject circle in circlePreFabs)
+            {
+                circle.gameObject.SetActive(false);
+            }
+        }
+
+        private float ManhattanDistanceWithHeight()
+        {
+            throw new NotImplementedException();
         }
     }
     [System.Serializable]
