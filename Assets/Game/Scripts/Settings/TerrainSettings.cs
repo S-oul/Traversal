@@ -6,6 +6,11 @@ public class TerrainConfig
     public float scale;
     public float heightMultiplier;
 
+    public static TerrainConfig Flat => new TerrainConfig
+    {
+        scale = 0f,
+        heightMultiplier = 1f,
+    };
     public static TerrainConfig Basic => new TerrainConfig
     {
         scale = 1.6f,

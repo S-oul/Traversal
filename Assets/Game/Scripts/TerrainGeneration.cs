@@ -88,11 +88,15 @@ public class TerrainGeneration : MonoBehaviour
             case TerrainGenerationType.Everest:
                 _currentSettings = TerrainConfig.EverestTerrain;
                 _noise = CircleTexture();
-                //BlendTextures(_noise, _noise, ref finalText,BlendOperation.Inverse);
+                finalText = _noise;
                 //failed attemps 
+                //BlendTextures(_noise, _noise, ref finalText,BlendOperation.Inverse);
+            break;
+            case TerrainGenerationType.Flat :
+                _currentSettings = TerrainConfig.Flat;
+                _noise = FlatTexture();
                 finalText = _noise;
             break;
-
 
         }
         Color[] pixels = finalText.GetPixels();
@@ -405,6 +409,24 @@ public class TerrainGeneration : MonoBehaviour
         texture.Apply();
         return texture;
     }
+    Texture2D FlatTexture()
+    {
+        Texture2D texture = new Texture2D(GRID_SIZE, GRID_SIZE);
+        texture.filterMode = FilterMode.Point;
+        Color[] pixels = new Color[GRID_SIZE * GRID_SIZE];
+
+        for (int y = 0; y < GRID_SIZE; y++)
+        {
+            for (int x = 0; x < GRID_SIZE; x++)
+            {
+                pixels[y * GRID_SIZE + x] = Color.white;
+            }
+        }
+
+        texture.SetPixels(pixels);
+        texture.Apply();
+        return texture;
+    }
 
     // TO COPY CAT
     // Texture2D BASETexture()
@@ -437,5 +459,7 @@ public enum TerrainGenerationType
     Ridges,
     DeepForest,
     Everest,
+    Flat,
+
 
 }
