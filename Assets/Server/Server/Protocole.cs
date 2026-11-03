@@ -181,20 +181,29 @@ public static class Protocole
 #endregion
 
     public enum Opcode : byte
-    {
-        //Client side (only server Receive)
-        C_PlayerInfo,
-        C_PlayerStart,
+{
+    //Client (only server Receive)
+    C_PlayerInfo,
+    C_PlayerStart,
+    C_Resign,
+    C_OfferDraw,
+    C_RespondDraw,       
+    C_RequestSync,       // Request full board state if client detects a desync
 
-        //All (both can receive)
-        A_PlayerMove,
+    //server (only Client Receive)
+    S_ServerStartedGame,
+    S_ServerValidatePlayer,
+    S_Seed,
+    S_GameInit,          
+    S_MoveRejected,     
+    S_GameOver,          
+    S_DrawOffered,       
+    S_DrawResponse,      // Opponent accepted/declined
+    S_SyncState,         // board snapshot + clock times
 
-        //server side (only Client Receive)
-        S_ServerStartedGame,
-        S_ServerValidatePlayer,
-        S_Seed
-        
-    }
+
+    A_PlayerMove,
+}
 
 
 #region packets
