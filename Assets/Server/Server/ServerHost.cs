@@ -10,6 +10,13 @@ using EventType = ENet6.EventType;
 
 public class Server : MonoBehaviour
 {
+    public static Server Instance { get; private set; }
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else DestroyImmediate(this);
+    }
+
     private ENet6.Host _Host;
 
     private Dictionary<Peer,string> _connectedPeers = new();
@@ -97,9 +104,9 @@ public class Server : MonoBehaviour
         {
             case Opcode.C_PlayerInfo:
                 {
-                    packet_PlayerInfoPacket info = packet_PlayerInfoPacket.Deserialize(data, offset);
-                        _connectedPeers[peer] = info.name;
-                    print("peer " + peer + " is " + info.name);
+                    Packet_PlayerInfoPacket info = Packet_PlayerInfoPacket.Deserialize(data, ref offset);
+                        _connectedPeers[peer] = info.Name;
+                    print("peer " + peer + " is " + info.Name);
                     break;
                 }
             case Opcode.C_PlayerStart:
@@ -107,28 +114,19 @@ public class Server : MonoBehaviour
                     foreach (var kvp in _connectedPeers)
                     {
                         Peer OtherPeer = kvp.Key;
-
-                        packet_ServerStartedGame packet = new();
-                        List<byte> data2 = new List<byte>();
-                        packet.Serialize(ref data2);
-
-                        Packet EnetPacket = default;
-                        EnetPacket.Create(data2.ToArray(), PacketFlags.Reliable);
-
-                        OtherPeer.Send(0,ref EnetPacket);
+                        new Packet_ServerStartedGame{}.SerializeAndSend(OtherPeer);
                     }
                     print("From peer " + peer + " -> Game Started");
                     break;
                 }
             case Opcode.A_PlayerMove:
                 {
-                    Packet EnetPacket = default;
-                    EnetPacket.Create(bytes, PacketFlags.Reliable);
+                    Packet_PlayerTurn packetTurn = Packet_PlayerTurn.Deserialize(data,ref offset);
 
                     foreach (var kvp in _connectedPeers)
                     {
                         Peer OtherPeer = kvp.Key;
-                        OtherPeer.Send(0,ref EnetPacket);
+                        packetTurn.SerializeAndSend(OtherPeer);
                     }
                     break;
                 }

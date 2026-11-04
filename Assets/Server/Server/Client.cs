@@ -7,6 +7,13 @@ using UnityEngine;
 using static Protocols.Protocole;
 public class Client : MonoBehaviour
 {
+    public static Client Instance { get; private set; }
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else DestroyImmediate(this);
+    }
+
     public TMP_InputField hostIP_Field;
     public TMP_InputField playerName_Field;
     
@@ -84,18 +91,18 @@ public class Client : MonoBehaviour
                             print("Connect");
 
                             //Our packet 
-                            packet_PlayerInfoPacket infoPacket = new()
+                            new Packet_PlayerInfoPacket 
                             {
-                                name = playerName_Field.text
-                            };
+                                Name = playerName_Field.text
+                            }.SerializeAndSend(serverPeer.Value);
                             
 
-                            List<byte> data = new List<byte>();
-                            infoPacket.Serialize(ref data);
-                            //Enet Packets
-                            Packet packet1 = default;
-                            packet1.Create(data.ToArray(), PacketFlags.Reliable);
-                            serverPeer.Value.Send(0, ref packet1);
+                            // List<byte> data = new List<byte>();
+                            // infoPacket.Serialize(ref data);
+                            // //Enet Packets
+                            // Packet packet1 = default;
+                            // packet1.Create(data.ToArray(), PacketFlags.Reliable);
+                            // serverPeer.Value.Send(0, ref packet1);
 
                             break;
                         }
@@ -137,8 +144,8 @@ public class Client : MonoBehaviour
                 }
             case Opcode.A_PlayerMove:
                 {   
-                    packet_PlayerTurn turn = packet_PlayerTurn.Deserialize(bytes.ToList(),offset); 
-                    print("Turn : " + turn.turnNumber + " move : " + turn.move);
+                    Packet_PlayerTurn turn = Packet_PlayerTurn.Deserialize(bytes.ToList(),ref offset); 
+                    print("Received " + turn.TurnNumber + turn.Move);
                     break;
                 }
         }
@@ -146,34 +153,24 @@ public class Client : MonoBehaviour
 
     public void StartGame()
     {
-        packet_PlayerStartGame packet = new();
-        List<byte> data = new List<byte>();
-        packet.Serialize(ref data);
-
-        Packet EnetPacket = default;
-        EnetPacket.Create(data.ToArray(), PacketFlags.Reliable);
-        serverPeer.Value.Send(0, ref EnetPacket);
+        Packet_PlayerStartGame packet = new();
+        packet.SerializeAndSend(serverPeer.Value);
     }
 
     public void DoTurn()
     {
-        packet_PlayerTurn packet = new();
+        Packet_PlayerTurn packet = new();
         const string piece = "SVE";
         const string col = "abcdefghji";
         
 
-        packet.turnNumber = (ushort) UnityEngine.Random.Range(0,65536);
-        packet.move = 
+        packet.TurnNumber = (ushort) UnityEngine.Random.Range(0,65536);
+        packet.Move = 
         piece[UnityEngine.Random.Range(0,3)].ToString()
         +col[UnityEngine.Random.Range(0,10)]
         +UnityEngine.Random.Range(1,11);
-
-        List<byte> data = new List<byte>();
-        packet.Serialize(ref data);
-
-        Packet EnetPacket = default;
-        EnetPacket.Create(data.ToArray(), PacketFlags.Reliable);
-        serverPeer.Value.Send(0, ref EnetPacket);
+        
+        packet.SerializeAndSend(serverPeer.Value);
     }
 
     void print(string str)

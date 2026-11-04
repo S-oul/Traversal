@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Net;
+using ENet6;
 
 namespace Protocols
 {
@@ -181,127 +182,232 @@ public static class Protocole
 #endregion
 
     public enum Opcode : byte
-{
-    //Client (only server Receive)
-    C_PlayerInfo,
-    C_PlayerStart,
-    C_Resign,
-    C_OfferDraw,
-    C_RespondDraw,       
-    C_RequestSync,       // Request full board state if client detects a desync
+    {
+        //Client (only server Receive)
+        C_PlayerInfo,
+        C_PlayerStart,
+        C_Resign,
+        C_OfferDraw,
+        C_RespondDraw,       
+        C_RequestSync,       // Request full board state if client detects a desync
 
-    //server (only Client Receive)
-    S_ServerStartedGame,
-    S_ServerValidatePlayer,
-    S_Seed,
-    S_GameInit,          
-    S_MoveRejected,     
-    S_GameOver,          
-    S_DrawOffered,       
-    S_DrawResponse,      // Opponent accepted/declined
-    S_SyncState,         // board snapshot + clock times
+        //server (only Client Receive)
+        S_ServerStartedGame,
+        S_ServerValidatePlayer,
+        S_Seed,
+        S_GameInit,          
+        S_MoveRejected,     
+        S_GameOver,          
+        S_DrawOffered,       
+        S_DrawResponse,      // Opponent accepted/declined
+        S_SyncState,         // board snapshot + clock times
 
 
-    A_PlayerMove,
-}
-
+        A_PlayerMove,
+    }
 
 #region packets
 
-    public struct packet_PlayerInfoPacket
+    public abstract class BasePacket<T> where T : BasePacket<T>, new()
     {
-        static Opcode opcode = Opcode.C_PlayerInfo;
+        public abstract Opcode Opcode { get; }
 
-        public string name;
-
+        protected abstract void OnSerialize(ref List<byte> data);
         public void Serialize(ref List<byte> byteArray)
         {
-            Serialize_Uint8(ref byteArray, (byte)opcode);
-            Serialize_str(ref byteArray, name);
-
-        }
-        public static packet_PlayerInfoPacket Deserialize(List<byte> byteArray, int offset)
-        {
-            packet_PlayerInfoPacket packet;
-            packet.name = Deserialize_str(byteArray, ref offset);
-            return packet;
-        }
-    };
-
-    public struct packet_PlayerStartGame
-    {
-        static Opcode opcode = Opcode.C_PlayerStart;
-
-        public void Serialize(ref List<byte> byteArray)
-        {
-            Serialize_Uint8(ref byteArray, (byte)opcode);
-
-        }
-    }
-
- //ALL
- 
-    public struct packet_PlayerTurn
-    {
-        static Opcode opcode = Opcode.A_PlayerMove;
-        
-        public ushort turnNumber;
-        // Numerotation Vg4 (Vanguard to g4)
-        public string move;
-
-
-        public void Serialize(ref List<byte> byteArray)
-        {
-            Serialize_Uint8(ref byteArray, (byte)opcode);
-            Serialize_Uint16(ref byteArray, turnNumber);
-            Serialize_str(ref byteArray, move);
-
+            Serialize_Uint8(ref byteArray, (byte)Opcode);
+            OnSerialize(ref byteArray);
         }
 
-        public static packet_PlayerTurn Deserialize(List<byte> byteArray, int offset)
+        public void SerializeAndSend(Peer peer, byte channelID = 0, PacketFlags flags = PacketFlags.Reliable)
         {
-            packet_PlayerTurn packet;
-            packet.turnNumber = Deserialize_Uint16(byteArray, ref offset);
-            packet.move = Deserialize_str(byteArray, ref offset);
+            List<byte> buffer = new List<byte>();
+            Serialize(ref buffer);
+
+            Packet packet = default;
+            packet.Create(buffer.ToArray(), flags);
+            peer.Send(channelID, ref packet);
+        }
+
+        public abstract void OnDeserialize(List<byte> data, ref int offset);
+        public static T Deserialize(List<byte> data, ref int offset)
+        {
+            T packet = new T();
+            packet.OnDeserialize(data, ref offset);
             return packet;
         }
     }
 
-    
+    #region Client
 
-    //SERVER
-
-
-    public struct packet_ServerStartedGame
-    {
-        static Opcode opcode = Opcode.S_ServerStartedGame;
-
-        public void Serialize(ref List<byte> byteArray)
+        public class Packet_PlayerInfoPacket : BasePacket<Packet_PlayerInfoPacket>
         {
-            Serialize_Uint8(ref byteArray, (byte)opcode);
+            public override Opcode Opcode => Opcode.C_PlayerInfo;
+
+            public string Name;
+
+            public override void OnDeserialize(List<byte> data, ref int offset)
+            {
+                Name = Deserialize_str(data, ref offset);
+            }
+            protected override void OnSerialize(ref List<byte> byteArray)
+            {
+                Serialize_str(ref byteArray, Name);
+            }
+        }
+
+        public class Packet_PlayerStartGame : BasePacket<Packet_PlayerStartGame>
+        {
+            public override Opcode Opcode => Opcode.C_PlayerStart;
+
+            public override void OnDeserialize(List<byte> data, ref int offset)
+            {
+            }
+
+            protected override void OnSerialize(ref List<byte> data)
+            {
+            }
+        }
+
+    #endregion
+
+    #region Server 
+
+        public class Packet_ServerStartedGame : BasePacket<Packet_ServerStartedGame>
+        {
+            public override Opcode Opcode => Opcode.S_ServerStartedGame;
+
+            protected override void OnSerialize(ref List<byte> byteArray)
+            {
+            }
+            public override void OnDeserialize(List<byte> data, ref int offset)
+            {
+            }
 
         }
+
+    #endregion
+
+    #region All
+
+        public class Packet_PlayerTurn : BasePacket<Packet_PlayerTurn>
+        {
+            public override Opcode Opcode => Opcode.A_PlayerMove;
+
+            public ushort TurnNumber;
+            // Numerotation Vg4 (Vanguard to g4)
+            public string Move;
+
+            public override void OnDeserialize(List<byte> data, ref int offset)
+            {
+                TurnNumber = Deserialize_Uint16(data, ref offset);
+                Move = Deserialize_str(data,ref offset);
+            }
+
+            protected override void OnSerialize(ref List<byte> byteArray)
+            {
+                Serialize_Uint16(ref byteArray, TurnNumber);
+                Serialize_str(ref byteArray, Move);
+            }
+        }
+
+    #endregion
+
+        //OLD
+        //     public struct packet_PlayerInfoPacket
+        //     {
+        //         static Opcode opcode = Opcode.C_PlayerInfo;
+
+        //         public string name;
+
+        //         public void Serialize(ref List<byte> byteArray)
+        //         {
+        //             Serialize_Uint8(ref byteArray, (byte)opcode);
+        //             Serialize_str(ref byteArray, name);
+
+        //         }
+        //         public static packet_PlayerInfoPacket Deserialize(List<byte> byteArray, int offset)
+        //         {
+        //             packet_PlayerInfoPacket packet;
+        //             packet.name = Deserialize_str(byteArray, ref offset);
+        //             return packet;
+        //         }
+        //     };
+
+        //     public struct packet_PlayerStartGame
+        //     {
+        //         static Opcode opcode = Opcode.C_PlayerStart;
+
+        //         public void Serialize(ref List<byte> byteArray)
+        //         {
+        //             Serialize_Uint8(ref byteArray, (byte)opcode);
+
+        //         }
+        //     }
+
+        //  //ALL
+
+        //     public struct packet_PlayerTurn
+        //     {
+        //         static Opcode opcode = Opcode.A_PlayerMove;
+
+        //         public ushort turnNumber;
+        //         // Numerotation Vg4 (Vanguard to g4)
+        //         public string move;
+
+
+        //         public void Serialize(ref List<byte> byteArray)
+        //         {
+        //             Serialize_Uint8(ref byteArray, (byte)opcode);
+        //             Serialize_Uint16(ref byteArray, turnNumber);
+        //             Serialize_str(ref byteArray, move);
+
+        //         }
+
+        //         public static packet_PlayerTurn Deserialize(List<byte> byteArray, int offset)
+        //         {
+        //             packet_PlayerTurn packet;
+        //             packet.turnNumber = Deserialize_Uint16(byteArray, ref offset);
+        //             packet.move = Deserialize_str(byteArray, ref offset);
+        //             return packet;
+        //         }
+        //     }
+
+
+
+        //     //SERVER
+
+
+        //     public struct packet_ServerStartedGame
+        //     {
+        //         static Opcode opcode = Opcode.S_ServerStartedGame;
+
+        //         public void Serialize(ref List<byte> byteArray)
+        //         {
+        //             Serialize_Uint8(ref byteArray, (byte)opcode);
+
+        //         }
+        //     }
+        //     public struct packet_SeedPacket
+        //     {
+        //         static Opcode opcode = Opcode.S_Seed;
+
+        //         public int seed;
+
+        //         public void Serialize(ref List<byte> byteArray)
+        //         {
+        //             Serialize_Uint8(ref byteArray, (byte)opcode);
+        //             Serialize_int32(ref byteArray, seed);
+        //         }
+
+        //         public static packet_SeedPacket Deserialize(List<byte> byteArray, int offset)
+        //         {
+        //             packet_SeedPacket packet;
+        //             packet.seed = Deserialize_int32(byteArray, ref offset);
+        //             return packet;
+        //         }
+        //     }
+
+        #endregion
     }
-    public struct packet_SeedPacket
-    {
-        static Opcode opcode = Opcode.S_Seed;
-
-        public int seed;
-        
-        public void Serialize(ref List<byte> byteArray)
-        {
-            Serialize_Uint8(ref byteArray, (byte)opcode);
-            Serialize_int32(ref byteArray, seed);
-        }
-        
-        public static packet_SeedPacket Deserialize(List<byte> byteArray, int offset)
-        {
-            packet_SeedPacket packet;
-            packet.seed = Deserialize_int32(byteArray, ref offset);
-            return packet;
-        }
-    }
-
-#endregion
-}
 }
