@@ -1,5 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Game.Scripts
@@ -7,9 +8,9 @@ namespace Game.Scripts
     public class BoardManager : MonoBehaviour
     {
         [SerializeField] private TerrainGeneration generator; 
-        [SerializeField] private List<GroundStack> board;
-        [SerializeField] private List<Coordinate> _coordinates;
-        [SerializeField] private Dictionary<Piece, Coordinate> _piecePositions;
+        [SerializeField] private GroundStack[,] board;
+        [SerializeField] private int[,] boardHeights;
+        [SerializeField] private Dictionary<Piece, GroundStack> _piecePositions;
         [SerializeField] private Player player1;
         [SerializeField] private Player player2;
         
@@ -22,17 +23,14 @@ namespace Game.Scripts
         [SerializeField] private GameObject circlePrefab;
         private List<GameObject> circlePreFabs;
         
-        public Dictionary<Piece, Coordinate> piecePositions
+        public Dictionary<Piece, GroundStack> piecePositions
         {
             get => _piecePositions;
             set => _piecePositions = value;
         }
 
-        public List<Coordinate> coordinates
-        {
-            get => _coordinates;
-            set => _coordinates = value;
-        }
+        public int[,] BoardHeights { get => boardHeights; set => boardHeights = value; }
+        public GroundStack[,] Board { get => board; set => board = value; }
 
         private void Start()
         {
@@ -47,103 +45,72 @@ namespace Game.Scripts
             }
             SetUpBoard();
         }
+
         public void SetUpBoard()
         {
-            board = new List<GroundStack>();
-            coordinates = new List<Coordinate>();
-            piecePositions = new Dictionary<Piece, Coordinate>();
+            boardHeights = new int[_boardSize, _boardSize];
+            board = new GroundStack[_boardSize, _boardSize];
+            piecePositions = new Dictionary<Piece, GroundStack>();
             
-            _team1 = player1.Team; // Print safe
-            _team2 = player2.Team; // Print safe
+            _team1 = player1.Team;
+            _team2 = player2.Team;
             
-            // Debug.Log(_team1.Count);
-            // Debug.Log(_team2.Count);
-            
-            board.AddRange( boardObject.GetComponentsInChildren<GroundStack>());
-            
-            // Add coordinates to each cell
-            for (int z = 0; z < _boardSize; z++)
+            foreach (var stack in boardObject.GetComponentsInChildren<GroundStack>())
             {
-                for (int x = 0; x < _boardSize; x++)
+                int x = stack.GridPos.x;
+                int y = stack.GridPos.y;
+
+                if (x >= 0 && x < _boardSize && y >= 0 && y < _boardSize)
                 {
-                    int index = z * _boardSize + x;
-        
-                    GroundStack stack = board[index];
-                    Coordinate coordinate = new Coordinate(stack, new Vector3(x, stack.Level, z));
-                    print(coordinate.position);
-                    coordinates.Add(coordinate);
-                    
-                    // Set up pieces of both teams on the board
-                    if(coordinate.position == new Vector3(0, stack.Level, 9)) Debug.Log("-----------------------------" + player1.name + "-----------------------------");
-                    
-                    if (coordinate.position == new Vector3(9, stack.Level, 2))
-                    {
-                        SetUpPiecePositions(player1, 0, coordinate, stack);
-                        
-                    }
-                    if (coordinate.position == new Vector3(9, stack.Level, 3))
-                    {
-                        SetUpPiecePositions(player1, 1, coordinate, stack);
-                    }
-                    if (coordinate.position == new Vector3(9, stack.Level, 4))
-                    {
-                        SetUpPiecePositions(player1, 2, coordinate, stack);
-                    }
-                    if(coordinate.position == new Vector3(5, stack.Level, 5)) // Please change to (9,y,5)
-                    {
-                        SetUpPiecePositions(player1, 3, coordinate, stack);
-                    }
-                    if(coordinate.position == new Vector3(9, stack.Level, 6))
-                    {
-                        SetUpPiecePositions(player1, 4, coordinate, stack);
+                    board[x, y] = stack;
+                }
+            }
 
-                    }
+            SetupTeamPieces();
+        }
 
-                    if (coordinate.position == new Vector3(9, stack.Level, 7))
-                    {
-                        SetUpPiecePositions(player1, 5, coordinate, stack);
+        private void SetupTeamPieces()
+        {
+            // Player 1 positions
+            SetupPieceIfValid(player1, 0, new Vector2Int(9, 2));
+            SetupPieceIfValid(player1, 1, new Vector2Int(9, 3));
+            SetupPieceIfValid(player1, 2, new Vector2Int(9, 4));
+            SetupPieceIfValid(player1, 3, new Vector2Int(5, 5));
+            SetupPieceIfValid(player1, 4, new Vector2Int(9, 6));
+            SetupPieceIfValid(player1, 5, new Vector2Int(9, 7));
 
-                    }
+            // Player 2 positions
+            SetupPieceIfValid(player2, 0, new Vector2Int(0, 2));
+            SetupPieceIfValid(player2, 1, new Vector2Int(0, 3));
+            SetupPieceIfValid(player2, 2, new Vector2Int(0, 4));
+            SetupPieceIfValid(player2, 3, new Vector2Int(0, 5));
+            SetupPieceIfValid(player2, 4, new Vector2Int(0, 6));
+            SetupPieceIfValid(player2, 5, new Vector2Int(0, 7));
+        }
 
-                    if(coordinate.position == new Vector3(0, stack.Level, 0)) Debug.Log("-----------------------------" + player2.name + "-----------------------------");
-
-                    if (coordinate.position == new Vector3(0, stack.Level, 2))
-                    {
-                        SetUpPiecePositions(player2, 0, coordinate, stack);
-                    }
-                    if (coordinate.position == new Vector3(0, stack.Level, 3))
-                    {
-                        SetUpPiecePositions(player2, 1, coordinate, stack);
-                        
-                    }
-                    if (coordinate.position == new Vector3(0, stack.Level, 4))
-                    {
-                        SetUpPiecePositions(player2, 2, coordinate, stack);
-                    }
-                    if(coordinate.position == new Vector3(0, stack.Level, 5))
-                    {
-                        SetUpPiecePositions(player2, 3, coordinate, stack);
-                    }
-                    if(coordinate.position == new Vector3(0, stack.Level, 6))
-                    {
-                        SetUpPiecePositions(player2, 4, coordinate, stack);
-                    }
-
-                    if (coordinate.position == new Vector3(0, stack.Level, 7))
-                    {
-                        SetUpPiecePositions(player2, 5, coordinate, stack);
-                    }
+        private void SetupPieceIfValid(Player player, int pieceIndex, Vector2Int coordinate)
+        {
+            if (coordinate.x >= 0 && coordinate.x < _boardSize && coordinate.y >= 0 && coordinate.y < _boardSize)
+            {
+                GroundStack stack = board[coordinate.x, coordinate.y];
+                if (stack != null && player.Team.Count > pieceIndex)
+                {
+                    Piece piece = player.Team[pieceIndex];
+                    piece.Player = player;
+                    piecePositions[piece] = stack;
+                    piece.Stack = stack;
+                    _piecePositions.TryAdd(piece,stack);
+                    piece.transform.position = ToBoardCoordinatePiece(piece, stack);
                 }
             }
         }
 
-        private void SetUpPiecePositions(Player player, int pieceNumber, Coordinate coordinate, GroundStack stack)
-        {
-            Piece piece = player.Team[pieceNumber];
-            piecePositions.Add(piece, coordinate);
-            // Debug.Log(piece.name + ", pos=" + coordinate.position);
-            piece.transform.position = ToBoardCoordinatePiece(piece, stack);
-        }
+        // private void SetUpPiecePositions(Player player, int pieceNumber, Vector2Int coordinate, GroundStack stack)
+        // {
+        //     Piece piece = player.Team[pieceNumber];
+        //     piecePositions[piece] = stack;
+        //     piece.transform.position = ToBoardCoordinatePiece(piece, stack);
+        // }
 
         public Vector3 ToBoardCoordinatePiece(Piece piece, GroundStack stack)
         {
@@ -152,31 +119,7 @@ namespace Game.Scripts
         
         public Vector3 ToBoardCoordinate(GroundStack stack)
         {
-            return new Vector3(stack.transform.position.x, stack.Top() + 1, stack.transform.position.z);
-        }
-
-        public void PlaceCircles(Piece piece)
-        {
-            Coordinate pieceCoordinate = piecePositions[piece];
-            int index = 0;
-            
-            for(int z = 0; z < _boardSize; z++)
-            {
-                for(int x = 0; x < _boardSize; x++)
-                {
-                    float distance = Mathf.Abs(x - pieceCoordinate.position.x) + Mathf.Abs(z - pieceCoordinate.position.z);
-                    if (distance <= piece.MovementCount)
-                    {
-                        print(
-                            "Distance=" + distance);
-                        GroundStack stack = board[z * _boardSize + x];
-                        circlePreFabs[index].transform.position = ToBoardCoordinate(stack);
-                        circlePreFabs[index].gameObject.SetActive(true);
-                        index++;
-                    }
-                                        
-                }
-            }
+            return new Vector3(stack.transform.position.x, stack.Top(), stack.transform.position.z);
         }
 
         public void HideCircles()
@@ -187,42 +130,106 @@ namespace Game.Scripts
             }
         }
 
-        private float ManhattanDistanceWithHeight()
+        private static readonly (int dx, int dy)[] Directions = 
         {
-            throw new NotImplementedException();
-        }
-    }
-    [System.Serializable]
-    public struct Coordinate
-    {
-        private GroundStack _groundStack;
-        private Vector3 _position;
-        
-        public GroundStack groundStack { get => _groundStack; set => _groundStack = value; }
-        public Vector3 position { get => _position; set => _position = value; }
+            (0, 1), (0, -1), (-1, 0), (1, 0)
+        };
 
-        public Coordinate(GroundStack groundStack, Vector3 position)
+        public List<GroundStack> ManhattanDistanceWithHeight(Piece piece)
         {
-            _groundStack = groundStack;
-            _position = position;
-        }
-        
-    }
+            GroundStack startPoint = piece.Stack;
+            int maxMovement = piece.MovementCount;
 
-    [System.Serializable]
-    public struct PiecePosition
-    {
-        private Piece _piece;
-        private Coordinate _coordinateOnBoard;
-        
-        public Piece piece { get => _piece; set => _piece = value; }
+            List<GroundStack> result = new();
 
-        public Coordinate coordinateOnBoard { get => _coordinateOnBoard; set => _coordinateOnBoard = value; }
+            int[,] remainingAt = new int[_boardSize, _boardSize];
+            for (int x = 0; x < _boardSize; x++)
+            {
+                for (int y = 0; y < _boardSize; y++)
+                {
+                    remainingAt[x, y] = -1; // -1 = unvisited
+                }
+            }
 
-        public PiecePosition(Piece piece, Coordinate coordinateOnBoard)
-        {
-            _piece = piece;
-            _coordinateOnBoard = coordinateOnBoard;
+            var toSearch = new Queue<(GroundStack stack, int budget)>();
+
+            int startX = startPoint.GridPos.x;
+            int startY = startPoint.GridPos.y;
+
+            remainingAt[startX, startY] = maxMovement;
+            toSearch.Enqueue((startPoint, maxMovement));
+            //result.Add(startPoint);
+
+            while (toSearch.Count > 0)
+            {
+                var current = toSearch.Dequeue();
+                var currentCoord = current.stack;
+                int currentBudget = current.budget;
+
+                if (currentBudget < remainingAt[currentCoord.GridPos.x, currentCoord.GridPos.y])
+                    continue;
+
+                int currentX = currentCoord.GridPos.x;
+                int currentY = currentCoord.GridPos.y;
+                int currentElevation = boardHeights[currentX, currentY];
+
+                foreach (var (dx, dy) in Directions)
+                {
+                    int x2 = currentX + dx;
+                    int y2 = currentY + dy;
+                    
+                    bool doSkip = false;
+                    foreach(var kvp in _piecePositions)
+                    {
+                        if(!doSkip && kvp.Value.GridPos == new Vector2Int(x2,y2))
+                        doSkip = true;
+                    }
+                    if(doSkip) continue;
+
+                    if (x2 < 0 || x2 >= _boardSize || y2 < 0 || y2 >= _boardSize)
+                        continue;
+
+                    int nextElevation = boardHeights[x2, y2];
+                    int heightDiff = Mathf.Abs(nextElevation - currentElevation);
+
+                    int totalStepCost = 1 + heightDiff; 
+                    int nextBudget = currentBudget - totalStepCost;
+
+                    if (nextBudget < 0)
+                        continue;
+
+                    GroundStack nextStack = board[x2, y2];
+                    if (nextStack == null) continue;
+
+                    if (nextBudget > remainingAt[x2, y2])
+                    {
+                        if (remainingAt[x2, y2] == -1)
+                        {
+                            result.Add(nextStack);
+                        }
+
+                        remainingAt[x2, y2] = nextBudget;
+                        toSearch.Enqueue((nextStack, nextBudget));
+                    }
+                }
+            }
+            
+            HideCircles();
+
+            //display circles plz
+            int index = 0;
+            foreach(var i in result)
+            {
+                if (index >= circlePreFabs.Count) break;
+
+                var circle = circlePreFabs[index];
+                circle.transform.position = ToBoardCoordinate(i) + Vector3.up * .11f;
+                circle.gameObject.SetActive(true);
+                circle.GetComponent<SpriteRenderer>().color = piece.Player == player1? Color.blue: Color.red;
+                index++;
+            } 
+
+            return result;
         }
     }
 }

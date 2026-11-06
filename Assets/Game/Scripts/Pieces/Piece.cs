@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Game.Scripts
@@ -10,20 +11,26 @@ namespace Game.Scripts
         
         [SerializeField] private int attack;
         [SerializeField] private int movementCount;
-
+        
+        [SerializeField] private GroundStack _stack;
         public int Attack => attack;
         public int MovementCount => movementCount;
 
+
+        private Player _player;
         [SerializeField] private BoardManager boardManager;
         
-        public void Move(Vector3 arrival)
-        {
+        public Player Player { get => _player; set => _player = value; }
+        public GroundStack Stack { get => _stack; set => _stack = value; }
 
-            int chosenMoveCount = 0;
-            
-            arrival = boardManager.coordinates[chosenMoveCount].position;
-        }
-        
+        // public void Move(Vector3 arrival)
+        // {
+
+        //     int chosenMoveCount = 0;
+
+        //     arrival = boardManager.coordinates[chosenMoveCount].position;
+        // }
+
         public string AlgebraicNotation()
         {
             return "";

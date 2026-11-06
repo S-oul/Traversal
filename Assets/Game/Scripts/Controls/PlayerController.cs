@@ -31,7 +31,13 @@ namespace Game.Scripts.Controls
                     print(hitInfo.collider.name);
                    
                     Piece piece = hitInfo.collider.GetComponent<Piece>();
-                    boardManager.PlaceCircles(piece);
+                    GroundStack stack;
+                    if(!boardManager.piecePositions.TryGetValue(piece,out stack))
+                    {
+                        print(piece + "Does not exist in priceposition");
+                        return;
+                    }
+                    boardManager.ManhattanDistanceWithHeight(piece);
                     if(outliner) outliner.enabled = true;
                 }
             }

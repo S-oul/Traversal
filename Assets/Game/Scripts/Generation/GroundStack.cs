@@ -6,6 +6,8 @@ public class GroundStack : MonoBehaviour
     private const float SPACE_BETWEEN_TILES = 0.25f;
     private const int MAX_LEVEL = 30;
 
+    private Vector2Int gridPos;
+
     [SerializeField][Range(0,MAX_LEVEL)]
     private int _level = 0;
 
@@ -23,6 +25,8 @@ public class GroundStack : MonoBehaviour
             OnLevelChanged(_level);
         }
     }
+
+    public Vector2Int GridPos { get => gridPos; set => gridPos = value; }
 
     void OnLevelChanged(int level)
     {

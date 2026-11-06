@@ -1,5 +1,4 @@
 using Game.Scripts;
-using NUnit.Framework;
 using UnityEngine;
 
 public class TerrainGeneration : MonoBehaviour
@@ -30,9 +29,13 @@ public class TerrainGeneration : MonoBehaviour
     public Texture2D ThirdNoise { get => _thirdNoise; set => _thirdNoise = value; }
 
 
-#endregion
+    #endregion
 
-#region Generation
+    void Start()
+    {
+        Generate();
+    }
+    #region Generation
     public void Generate(int newSeed)
     {
         _seed=newSeed;
@@ -114,7 +117,7 @@ public class TerrainGeneration : MonoBehaviour
 
         if(Enforce2GapLimits) EnforceMaxSlope(ref levels, maxDifference: 2);
         if(EnforceMinimumHeigh) EnforceMinimumGround(ref levels);
-
+        _boardManager.Board = new GroundStack[GRID_SIZE,GRID_SIZE];
         for (int x = 0; x < GRID_SIZE; x++)
         {
             for (int y = 0; y < GRID_SIZE; y++)
@@ -122,9 +125,12 @@ public class TerrainGeneration : MonoBehaviour
                 GroundStack g = Instantiate(_groundStack, board.transform).GetComponent<GroundStack>();
                 g.transform.localPosition = new Vector3(x + _space * x, 0, y + _space * y);
                 g.Level = levels[x, y];
+                g.GridPos = new Vector2Int(x,y);
+                _boardManager.Board[x,y] = g;
             }
         }
         _boardManager.SetUpBoard();
+        _boardManager.BoardHeights = levels;
     }
     private void EnforceMinimumGround(ref int[,] gridLevels)
     {
