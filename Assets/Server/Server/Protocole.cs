@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Net;
 using ENet6;
+using System.Reflection;
 
 namespace Protocols
 {
@@ -194,7 +195,6 @@ public static class Protocole
         //server (only Client Receive)
         S_ServerStartedGame,
         S_ServerValidatePlayer,
-        S_Seed,
         S_GameInit,          
         S_MoveRejected,     
         S_GameOver,          
@@ -203,6 +203,7 @@ public static class Protocole
         S_SyncState,         // board snapshot + clock times
 
 
+        A_Seed,
         A_PlayerMove,
     }
 
@@ -311,7 +312,24 @@ public static class Protocole
             }
         }
 
-    #endregion
+
+        public class Packet_Seed : BasePacket<Packet_Seed>
+        {
+            public override Opcode Opcode => Opcode.A_Seed;
+
+            public int Seed;  
+            public override void OnDeserialize(List<byte> data, ref int offset)
+            {
+                Seed = Deserialize_int32(data, ref offset);
+            }
+
+            protected override void OnSerialize(ref List<byte> data)
+            {
+                Serialize_int32(ref data, Seed);
+            }
+        }
+
+        #endregion
 
         //OLD
         //     public struct packet_PlayerInfoPacket

@@ -145,7 +145,7 @@ public class Client : MonoBehaviour
             case Opcode.A_PlayerMove:
                 {   
                     Packet_PlayerTurn turn = Packet_PlayerTurn.Deserialize(bytes.ToList(),ref offset); 
-                    print("Received " + turn.TurnNumber + turn.Move);
+                    print("Received " + turn.TurnNumber + " " + turn.Move);
                     break;
                 }
         }
@@ -157,6 +157,7 @@ public class Client : MonoBehaviour
         packet.SerializeAndSend(serverPeer.Value);
     }
 
+    ushort turn;
     public void DoTurn()
     {
         Packet_PlayerTurn packet = new();
@@ -164,7 +165,7 @@ public class Client : MonoBehaviour
         const string col = "abcdefghji";
         
 
-        packet.TurnNumber = (ushort) UnityEngine.Random.Range(0,65536);
+        packet.TurnNumber = turn++;
         packet.Move = 
         piece[UnityEngine.Random.Range(0,3)].ToString()
         +col[UnityEngine.Random.Range(0,10)]
