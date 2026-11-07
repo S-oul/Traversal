@@ -6,5 +6,10 @@ namespace Game.Scripts
     {
         public int Attack => 3;
         public int MovementCount => 3;
+
+        public override char AlgebraicNotation()
+        {
+            return 'S';
+        }
     }
 }

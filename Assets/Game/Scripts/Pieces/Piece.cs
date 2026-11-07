@@ -13,15 +13,30 @@ namespace Game.Scripts
         [SerializeField] private int movementCount;
         
         [SerializeField] private GroundStack _stack;
+        [SerializeField] private BoardManager boardManager;
+        private Player _player;
+        
+        private Outline _outline;
+
         public int Attack => attack;
         public int MovementCount => movementCount;
-
-
-        private Player _player;
-        [SerializeField] private BoardManager boardManager;
-        
         public Player Player { get => _player; set => _player = value; }
         public GroundStack Stack { get => _stack; set => _stack = value; }
+
+        void Start()
+        {
+            _outline = GetComponent<Outline>();
+        }
+
+        public void SelectPiece()
+        {
+            _outline.enabled = true;
+        }
+
+        public void UnSelectPiece()
+        {
+            _outline.enabled = false;
+        }
 
         // public void Move(Vector3 arrival)
         // {
@@ -31,10 +46,7 @@ namespace Game.Scripts
         //     arrival = boardManager.coordinates[chosenMoveCount].position;
         // }
 
-        public string AlgebraicNotation()
-        {
-            return "";
-        }
+        public abstract char AlgebraicNotation();
 
         public void toAlphabet()
         {

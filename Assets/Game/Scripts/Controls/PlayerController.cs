@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -6,7 +7,7 @@ namespace Game.Scripts.Controls
 {
     public class PlayerController : MonoBehaviour
     {
-        private Outline outliner;
+        private Piece _lastSelectedPiece;
         
         [SerializeField] BoardManager boardManager;
         
@@ -15,31 +16,40 @@ namespace Game.Scripts.Controls
             
             if (callbackContext.performed)
             {
-                Debug.Log("Left click performed");
                 Camera cam = Camera.main;
                 
                 Ray ray = cam.ScreenPointToRay(Input.mousePosition);
 
+                string log = "Left click performed";
+
                 if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity, ~0))
                 {
-                    if(outliner)
+                    if(_lastSelectedPiece)
                     {
                         boardManager.HideCircles();
-                        outliner.enabled = false;
+                        _lastSelectedPiece.UnSelectPiece();
                     }
-                    outliner = hitInfo.collider.GetComponent<Outline>(); // New piece
-                    print(hitInfo.collider.name);
-                   
-                    Piece piece = hitInfo.collider.GetComponent<Piece>();
-                    GroundStack stack;
-                    if(!boardManager.piecePositions.TryGetValue(piece,out stack))
+
+                    if (hitInfo.collider.CompareTag("Circles"))
                     {
-                        print(piece + "Does not exist in priceposition");
-                        return;
+                        log += " On Circle";
+                        //HandleMov    
                     }
-                    boardManager.ManhattanDistanceWithHeight(piece);
-                    if(outliner) outliner.enabled = true;
+
+                    if (hitInfo.collider.CompareTag("Piece"))
+                    {
+                        log += " On Piece";
+
+                        Piece piece = hitInfo.collider.GetComponent<Piece>();
+                        
+                        piece.SelectPiece();
+                        _lastSelectedPiece = piece;
+
+                        boardManager.ManhattanDistanceWithHeight(piece);
+                    }
                 }
+                
+                Debug.Log(log);
             }
             
         }
@@ -48,9 +58,9 @@ namespace Game.Scripts.Controls
         {
             if (callbackContext.performed)
             {
-                boardManager.HideCircles();
-                if(outliner) outliner.enabled = false;
                 Debug.Log("Right click performed");
+                boardManager.HideCircles();
+
             }
         }
     }

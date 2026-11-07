@@ -6,5 +6,10 @@ namespace Game.Scripts
     {
         public int Attack => 2;
         public int MovementCount => 4;
+
+        public override char AlgebraicNotation()
+        {
+            return 'V';
+        }
     }
 }

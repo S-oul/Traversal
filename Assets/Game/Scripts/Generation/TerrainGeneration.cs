@@ -6,6 +6,7 @@ public class TerrainGeneration : MonoBehaviour
     private const int GRID_SIZE = 10;
     private const int MAX_GRID_HEIGHT = 17;
 
+    public bool GenerateRandomAtStart = true;
     public bool Enforce2GapLimits = true;
     public bool EnforceMinimumHeigh = true;
     [SerializeField] TerrainGenerationType _type;
@@ -33,7 +34,14 @@ public class TerrainGeneration : MonoBehaviour
 
     void Start()
     {
-        Generate();
+        if (GenerateRandomAtStart)
+        {
+            Generate(Random.Range(-1000000,1000000));
+        }
+        else
+        {
+            Generate();
+        }
     }
     #region Generation
     public void Generate(int newSeed)

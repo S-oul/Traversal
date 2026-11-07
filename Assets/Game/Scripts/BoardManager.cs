@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -10,10 +12,12 @@ namespace Game.Scripts
         [SerializeField] private TerrainGeneration generator; 
         [SerializeField] private GroundStack[,] board;
         [SerializeField] private int[,] boardHeights;
-        [SerializeField] private Dictionary<Piece, GroundStack> _piecePositions;
+        [SerializeField] private Dictionary<Piece, GroundStack> _pieceGroundStack;
+        [SerializeField] private Dictionary<Vector2Int, Piece> _positionPiece;
         [SerializeField] private Player player1;
         [SerializeField] private Player player2;
         
+        [SerializeField] string FEN_Notation;
         private List<Piece> _team1 = new();
         private List<Piece> _team2 = new();
         
@@ -23,10 +27,10 @@ namespace Game.Scripts
         [SerializeField] private GameObject circlePrefab;
         private List<GameObject> circlePreFabs;
         
-        public Dictionary<Piece, GroundStack> piecePositions
+        public Dictionary<Piece, GroundStack> PieceGroundStack
         {
-            get => _piecePositions;
-            set => _piecePositions = value;
+            get => _pieceGroundStack;
+            set => _pieceGroundStack = value;
         }
 
         public int[,] BoardHeights { get => boardHeights; set => boardHeights = value; }
@@ -43,15 +47,16 @@ namespace Game.Scripts
                 circle.transform.SetParent(container.transform);
                 circlePreFabs.Add(circle);
             }
-            SetUpBoard();
+            //SetUpBoard();
         }
 
         public void SetUpBoard()
         {
+            FEN_Notation = "";
             boardHeights = new int[_boardSize, _boardSize];
             board = new GroundStack[_boardSize, _boardSize];
-            piecePositions = new Dictionary<Piece, GroundStack>();
-            
+            _pieceGroundStack = new Dictionary<Piece, GroundStack>();
+            _positionPiece = new Dictionary<Vector2Int, Piece>(); 
             _team1 = player1.Team;
             _team2 = player2.Team;
             
@@ -65,8 +70,58 @@ namespace Game.Scripts
                     board[x, y] = stack;
                 }
             }
+            RandomSetupTeamPieces();
+            //SetupTeamPieces();
+            print(CreateFenNotation());
+        }
 
-            SetupTeamPieces();
+        private string CreateFenNotation()
+        {
+            StringBuilder fen = new();
+
+            Vector2Int[] positions = new Vector2Int[12];
+
+            int index = 0;
+            foreach(var g in _pieceGroundStack.Values)
+            {
+                positions[index++] = g.GridPos;
+            }
+
+
+            for (int y = 9; y >= 0; y--)
+            {
+                int emptyCount = 0;
+
+                for (int x = 0; x < 10; x++)
+                {
+                    if (positions.Contains(new Vector2Int(x, y)))
+                    {
+                        if (emptyCount > 0)
+                        {
+                            fen.Append(emptyCount);
+                            emptyCount = 0;
+                        }
+                        
+                        Piece piece;
+                        _positionPiece.TryGetValue(new Vector2Int(x, y), out piece);
+                        char notation = piece.AlgebraicNotation();
+                        notation = piece.Player == player1? char.ToUpper(notation) : char.ToLower(notation);
+                        fen.Append(notation);
+                    }
+                    else
+                    {
+                        emptyCount++;
+                    }
+                }
+
+                if (emptyCount > 0)
+                    fen.Append(emptyCount);
+
+                if (y > 0)
+                    fen.Append('/');
+            }
+            FEN_Notation = fen.ToString();
+            return fen.ToString();
         }
 
         private void SetupTeamPieces()
@@ -75,7 +130,7 @@ namespace Game.Scripts
             SetupPieceIfValid(player1, 0, new Vector2Int(9, 2));
             SetupPieceIfValid(player1, 1, new Vector2Int(9, 3));
             SetupPieceIfValid(player1, 2, new Vector2Int(9, 4));
-            SetupPieceIfValid(player1, 3, new Vector2Int(5, 5));
+            SetupPieceIfValid(player1, 3, new Vector2Int(1, 4));
             SetupPieceIfValid(player1, 4, new Vector2Int(9, 6));
             SetupPieceIfValid(player1, 5, new Vector2Int(9, 7));
 
@@ -88,6 +143,34 @@ namespace Game.Scripts
             SetupPieceIfValid(player2, 5, new Vector2Int(0, 7));
         }
 
+        HashSet<Vector2Int> usedPositions = new HashSet<Vector2Int>();
+        private void RandomSetupTeamPieces()
+        {
+            usedPositions = new HashSet<Vector2Int>();
+            SetupRandomTeam(player1);
+            SetupRandomTeam(player2);
+        }
+
+        private void SetupRandomTeam(Player player)
+        {
+
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2Int randomPos;
+
+                do
+                {
+                    randomPos = new Vector2Int(
+                        Random.Range(2, 8),
+                        Random.Range(2, 8)
+                    );
+                }
+                while (!usedPositions.Add(randomPos));
+
+                SetupPieceIfValid(player, i, randomPos);
+            }
+        }
+
         private void SetupPieceIfValid(Player player, int pieceIndex, Vector2Int coordinate)
         {
             if (coordinate.x >= 0 && coordinate.x < _boardSize && coordinate.y >= 0 && coordinate.y < _boardSize)
@@ -97,9 +180,10 @@ namespace Game.Scripts
                 {
                     Piece piece = player.Team[pieceIndex];
                     piece.Player = player;
-                    piecePositions[piece] = stack;
+                    PieceGroundStack[piece] = stack;
                     piece.Stack = stack;
-                    _piecePositions.TryAdd(piece,stack);
+                    _pieceGroundStack.TryAdd(piece,stack);
+                    _positionPiece.TryAdd(coordinate, piece);
                     piece.transform.position = ToBoardCoordinatePiece(piece, stack);
                 }
             }
@@ -132,7 +216,8 @@ namespace Game.Scripts
 
         private static readonly (int dx, int dy)[] Directions = 
         {
-            (0, 1), (0, -1), (-1, 0), (1, 0)
+            (0, 1), (0, -1), (-1, 0), (1, 0),
+            //(1, 1), (-1, 1), (-1, -1),(1, -1), 
         };
 
         public List<GroundStack> ManhattanDistanceWithHeight(Piece piece)
@@ -178,16 +263,35 @@ namespace Game.Scripts
                     int x2 = currentX + dx;
                     int y2 = currentY + dy;
                     
+                    //need to add Win Board Conditions
+                    if (x2 < 0 || x2 >= _boardSize || y2 < 0 || y2 >= _boardSize)
+                        continue;
+
                     bool doSkip = false;
-                    foreach(var kvp in _piecePositions)
+                    bool enqueueToSearch = true;
+                    foreach(var kvp in _pieceGroundStack)
                     {
-                        if(!doSkip && kvp.Value.GridPos == new Vector2Int(x2,y2))
-                        doSkip = true;
+                        Piece otherPiece = kvp.Key;
+                        if(otherPiece == piece) continue;
+                        if(!doSkip && kvp.Value.GridPos == new Vector2Int(x2, y2))
+                        {
+                            if
+                            (
+                                otherPiece.Player != piece.Player 
+                                && otherPiece.Attack <= piece.Attack
+                            )
+                            {
+                                //can attack Case Valid but do not search for case after;
+                                enqueueToSearch = false;
+                            }
+                            else 
+                            { 
+                                doSkip = true;
+                            }
+                        }
                     }
                     if(doSkip) continue;
 
-                    if (x2 < 0 || x2 >= _boardSize || y2 < 0 || y2 >= _boardSize)
-                        continue;
 
                     int nextElevation = boardHeights[x2, y2];
                     int heightDiff = Mathf.Abs(nextElevation - currentElevation);
@@ -209,7 +313,7 @@ namespace Game.Scripts
                         }
 
                         remainingAt[x2, y2] = nextBudget;
-                        toSearch.Enqueue((nextStack, nextBudget));
+                        if(enqueueToSearch) toSearch.Enqueue((nextStack, nextBudget));
                     }
                 }
             }
