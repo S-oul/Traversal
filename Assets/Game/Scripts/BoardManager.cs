@@ -9,39 +9,44 @@ namespace Game.Scripts
 {
     public class BoardManager : MonoBehaviour
     {
+        #region Variables
         [SerializeField] private TerrainGeneration generator; 
+        
         [SerializeField] private List<GroundStack> board;
         [SerializeField] private List<Coordinate> _coordinates;
         [SerializeField] private Dictionary<Piece, Coordinate> _piecePositions;
+        [SerializeField] private List<Vector2Int> occupiedPositions;
+        
         [SerializeField] private Player player1;
         [SerializeField] private Player player2;
-        [SerializeField] private List<Vector2Int> occupiedPositions;
-
-        private Graph _graph = new();
+        
+        [SerializeField] private GameObject circlePrefab;
+        
+        private readonly Graph _graph = new();
         
         private List<Piece> _team1;
         private List<Piece> _team2;
         
-        private int _boardSize = 10;
+        private readonly int _boardSize = 10;
         public GameObject boardObject;
         
-        [SerializeField] private GameObject circlePrefab;
-        private List<GameObject> circlePreFabs;
+        private List<GameObject> _circlePreFabs;
         
         public Dictionary<Piece, Coordinate> piecePositions { get => _piecePositions; set => _piecePositions = value; }
         public List<Coordinate> coordinates { get => _coordinates; set => _coordinates = value; }
+        #endregion
 
         private void Start()
         {
             GameObject container = new GameObject("CirclesContainer"); 
-            circlePreFabs = new List<GameObject>();
+            _circlePreFabs = new List<GameObject>();
             
             for (int i = 0; i <= 200; i++)
             {
                 GameObject circle = Instantiate(circlePrefab, new Vector3(-100, 0, -100), Quaternion.Euler(90,0,0));
                 circle.SetActive(false);
                 circle.transform.SetParent(container.transform);
-                circlePreFabs.Add(circle);
+                _circlePreFabs.Add(circle);
             }
             
             SetUpBoard();
@@ -58,7 +63,7 @@ namespace Game.Scripts
                     )
                 );
 
-                Debug.Log("Occupied by" + piecePosition.Key.name + ", at" + piecePosition.Value.position);
+                // Debug.Log("Occupied by" + piecePosition.Key.name + ", at" + piecePosition.Value.position);
             }
             AddGraphEdges();
         }
@@ -79,16 +84,13 @@ namespace Game.Scripts
                 for (int x = 0; x < _boardSize; x++)
                 {
                     int index = z * _boardSize + x;
-                    
                     GroundStack stack = board[index]; // Get each stack from the board
                     Coordinate coordinate = new Coordinate(stack, new Vector3(x, stack.Level, z)); // Associate them with coordinates
-                    coordinates.Add(coordinate);
-                    _graph.AddVertex(new Vector2Int(x, z));
+                    
+                    coordinates.Add(coordinate); // Contain the coordinates in a list
+                    _graph.AddVertex(new Vector2Int(x, z)); // Build the graph by adding the vertices
 
                     #region SetupPieceOnBoard
-
-                    
-
                     // Set up pieces of both teams on the board
                     if(coordinate.position == new Vector3(0, stack.Level, 9)) Debug.Log("-----------------------------" + player1.name + "-----------------------------");
                     
@@ -150,6 +152,7 @@ namespace Game.Scripts
             }
         }
 
+        #region GraphBuild
         private void AddGraphEdges()
         {
             Vector2Int[] directions =
@@ -159,7 +162,10 @@ namespace Game.Scripts
                 Vector2Int.left,
                 Vector2Int.right
             };
-
+            
+            // If you combine directions with the explorator, cost of the edge is reduced
+            // Same if you make two steps forward regardless height/direction
+            
             foreach (Vector2Int vertex in _graph.Vertices)
             {
                 foreach (Vector2Int direction in directions)
@@ -179,97 +185,18 @@ namespace Game.Scripts
                 }
             }
         }
+        #endregion
         
-        public Dictionary<Vector2Int, int> GetDistances(Piece piece)
+        private void SetUpPiecePositions(Player player, int pieceNumber, Coordinate coordinate, GroundStack stack)
         {
-            Coordinate coordinate = piecePositions[piece];
-            Dictionary<Vector2Int, int> distances =
-                Dijkstra(_graph.adjacency,
-                    new Vector2Int(
-                        Mathf.RoundToInt(coordinate.position.x),
-                        Mathf.RoundToInt(coordinate.position.z)
-                    )
-                );
-            return distances;
-        }
-
-        private Dictionary<Vector2Int, int> Dijkstra(Dictionary<Vector2Int, List<Edge>> adjacency, Vector2Int source)
-        {
-            int vertexCount = adjacency.Count;
-
-            Dictionary<Vector2Int, int> distances = new(vertexCount);
-            HashSet<Vector2Int> visited = new(vertexCount);
-
-            foreach (Vector2Int vertex in adjacency.Keys) distances[vertex] = int.MaxValue;
-            
-            if (!adjacency.ContainsKey(source)) return distances;
-
-            distances[source] = 0;
-
-            while (true)
-            {
-                Vector2Int? current = null;
-                int minDistance = int.MaxValue;
-
-                foreach (Vector2Int vertex in adjacency.Keys)
-                {
-                    if (visited.Contains(vertex)) continue;
-
-                    if (distances[vertex] < minDistance)
-                    {
-                        minDistance = distances[vertex];
-                        current = vertex;
-                    }
-                }
-
-                if (current == null) break;
-
-                Vector2Int u = current.Value;
-                int d = distances[u];
-
-                foreach (Edge edge in adjacency[u])
-                {
-                    Vector2Int v = edge.To;
-                    int cost = edge.Cost;
-
-                    if (visited.Contains(v)) continue;
-                    
-                    int newDistance = d + cost;
-                    
-                    if (newDistance < distances[v]) distances[v] = newDistance;
-                    
-                }
-
-                visited.Add(u);
-            }
-
-            return distances;
+            Piece piece = player.Team[pieceNumber];
+            piecePositions.Add(piece, coordinate);
+            piece.transform.position = ToBoardCoordinatePiece(piece, stack);
         }
         
-        
-        private int GetMovementCost(GroundStack from, GroundStack to)
-        {
-            int heightDifference = Mathf.Abs(to.Level - from.Level);
-            return 1 + heightDifference;
-        }
-
+        #region CircleMethods
         public void PlaceCircles(Piece piece)
         {
-            List<Vector2Int> occupiedPositions = new List<Vector2Int>(piecePositions.Count);
-
-            foreach (var piecePosition in piecePositions)
-            {
-                occupiedPositions.Add
-                (
-                    new Vector2Int(
-                        Mathf.RoundToInt(piecePosition.Value.position.x),
-                        Mathf.RoundToInt(piecePosition.Value.position.z)
-                    )
-                );
-
-                Debug.Log("Occupied by" + piecePosition.Key.name + ", at" + piecePosition.Value.position);
-            }
-
             Coordinate sourceCoordinate = piecePositions[piece];
             Dictionary<Vector2Int, int> distances = GetDistances(piece);
             int index = 0;
@@ -289,10 +216,10 @@ namespace Game.Scripts
                 
                 GroundStack stack = GetStack(possiblePosition);
 
-                if (index >= circlePreFabs.Count) break;
+                if (index >= _circlePreFabs.Count) break;
 
-                circlePreFabs[index].transform.position = ToBoardCoordinate(stack);
-                circlePreFabs[index].gameObject.SetActive(true);
+                _circlePreFabs[index].transform.position = ToBoardCoordinate(stack);
+                _circlePreFabs[index].gameObject.SetActive(true);
                 index++;
             }
             
@@ -309,6 +236,28 @@ namespace Game.Scripts
             // }
         }
 
+        public void HideCircles()
+        {
+            foreach(GameObject circle in _circlePreFabs)
+            {
+                circle.gameObject.SetActive(false);
+            }
+        }
+        #endregion
+        #region Converters
+        private Vector3 ToBoardCoordinatePiece(Piece piece, GroundStack stack)
+        {
+            return new Vector3(stack.transform.position.x, stack.Top() + piece.GetMidHeight(), stack.transform.position.z);
+        }
+        
+        private Vector3 ToBoardCoordinate(GroundStack stack)
+        {
+            return new Vector3(stack.transform.position.x, stack.Top() + 0.12f, stack.transform.position.z);
+        }
+        #endregion
+        
+        #region Dijsktra
+        
         private bool IsOccupied(Vector2Int targetPosition)
         {
             if(occupiedPositions.Contains(targetPosition)) return true;
@@ -320,33 +269,81 @@ namespace Game.Scripts
             int index = position.y * _boardSize + position.x;
             return board[index];
         }
-
-        public void HideCircles()
+        
+        private int GetMovementCost(GroundStack from, GroundStack to)
         {
-            foreach(GameObject circle in circlePreFabs)
+            int heightDifference = Mathf.Abs(to.Level - from.Level);
+            return 1 + heightDifference;
+        }
+        
+        /// <summary>
+        /// C'est très compliqué, sujet de doctorat possible
+        /// </summary>
+        /// <param name="adjacency"></param>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        private Dictionary<Vector2Int, int> Dijkstra(Dictionary<Vector2Int, List<Edge>> adjacency, Vector2Int source)
+        {
+            
+            int vertexCount = adjacency.Count;
+
+            Dictionary<Vector2Int, int> distances = new(vertexCount);
+            HashSet<Vector2Int> visited = new(vertexCount);
+
+            foreach (Vector2Int vertex in adjacency.Keys) distances[vertex] = int.MaxValue;
+            if (!adjacency.ContainsKey(source)) return distances;
+            
+            distances[source] = 0;
+
+            while (true)
             {
-                circle.gameObject.SetActive(false);
-            }
-        }
-        
-        private void SetUpPiecePositions(Player player, int pieceNumber, Coordinate coordinate, GroundStack stack)
-        {
-            Piece piece = player.Team[pieceNumber];
-            piecePositions.Add(piece, coordinate);
-            piece.transform.position = ToBoardCoordinatePiece(piece, stack);
-        }
+                Vector2Int? current = null;
+                int minDistance = int.MaxValue;
 
-        private Vector3 ToBoardCoordinatePiece(Piece piece, GroundStack stack)
-        {
-            return new Vector3(stack.transform.position.x, stack.Top() + piece.GetMidHeight(), stack.transform.position.z);
+                foreach (Vector2Int vertex in adjacency.Keys)
+                {
+                    if (visited.Contains(vertex)) continue;
+                    if (distances[vertex] < minDistance)
+                    {
+                        minDistance = distances[vertex];
+                        current = vertex;
+                    }
+                }
+
+                if (current == null) break;
+                Vector2Int u = current.Value;
+                int d = distances[u];
+
+                foreach (Edge edge in adjacency[u])
+                {
+                    Vector2Int v = edge.To;
+                    int cost = edge.Cost;
+
+                    if (visited.Contains(v)) continue;
+                    int newDistance = d + cost;
+                    if (newDistance < distances[v]) distances[v] = newDistance;
+                    
+                }
+                visited.Add(u);
+            }
+            return distances;
         }
         
-        private Vector3 ToBoardCoordinate(GroundStack stack)
+        private Dictionary<Vector2Int, int> GetDistances(Piece piece)
         {
-            return new Vector3(stack.transform.position.x, stack.Top() + 0.12f, stack.transform.position.z);
+            Coordinate coordinate = piecePositions[piece];
+            Dictionary<Vector2Int, int> distances =
+                Dijkstra(_graph.adjacency,
+                    new Vector2Int(
+                        Mathf.RoundToInt(coordinate.position.x),
+                        Mathf.RoundToInt(coordinate.position.z)
+                    )
+                );
+            return distances;
         }
+        #endregion
     }
-    
+    #region Structs
     [Serializable]
     public struct Coordinate
     {
@@ -379,4 +376,6 @@ namespace Game.Scripts
             _coordinateOnBoard = coordinateOnBoard;
         }
     }
+    #endregion
+    
 }
