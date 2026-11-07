@@ -1128,6 +1128,7 @@ MonoBehaviour:
   _coordinates: []
   player1: {fileID: 2030846882}
   player2: {fileID: 1605416206}
+  occupiedPositions: []
   boardObject: {fileID: 1137852376}
   circlePrefab: {fileID: 2098396022477170417, guid: cd548e430b1a4d74aa19bed65a8a1d49, type: 3}
 --- !u!4 &80162333
@@ -10467,13 +10468,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 818919734}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.12278779, y: 0.6963643, z: -0.12278779, w: 0.6963643}
-  m_LocalPosition: {x: -5.05, y: 5.96, z: 5.37}
+  m_LocalRotation: {x: 0.31138703, y: 0.6348528, z: -0.31138706, w: 0.6348529}
+  m_LocalPosition: {x: 0.564, y: 5.687, z: 5.37}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 20, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 52.255, y: 90, z: 0}
 --- !u!114 &818919738
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -60,6 +60,7 @@ namespace Game.Scripts
 
                 Debug.Log("Occupied by" + piecePosition.Key.name + ", at" + piecePosition.Value.position);
             }
+            AddGraphEdges();
         }
         public void SetUpBoard()
         {
@@ -147,9 +148,8 @@ namespace Game.Scripts
                     #endregion
                 }
             }
-            AddGraphEdges();
         }
-        
+
         private void AddGraphEdges()
         {
             Vector2Int[] directions =
@@ -164,20 +164,18 @@ namespace Game.Scripts
             {
                 foreach (Vector2Int direction in directions)
                 {
-                    {
-                        Vector2Int neighbor = vertex + direction;
+                    Vector2Int neighbor = vertex + direction;
 
-                        if (!_graph.ContainsVertex(neighbor)) continue;
+                    if (!_graph.ContainsVertex(neighbor)) continue;
 
-                        int fromIndex = vertex.y * _boardSize + vertex.x;
-                        int toIndex = neighbor.y * _boardSize + neighbor.x;
+                    int fromIndex = vertex.y * _boardSize + vertex.x;
+                    int toIndex = neighbor.y * _boardSize + neighbor.x;
 
-                        GroundStack from = board[fromIndex];
-                        GroundStack to = board[toIndex];
+                    GroundStack from = board[fromIndex];
+                    GroundStack to = board[toIndex];
 
-                        int cost = GetMovementCost(from, to);
-                        _graph.AddEdge(vertex, neighbor, cost);
-                    }
+                    int cost = GetMovementCost(from, to);
+                    if (!IsOccupied(neighbor)) _graph.AddEdge(vertex, neighbor, cost);
                 }
             }
         }
@@ -284,13 +282,7 @@ namespace Game.Scripts
                 if (d > piece.MovementCount) continue;
                 
                 // If it is the source, don't show
-                if (
-                    possiblePosition.x == Mathf.RoundToInt(sourceCoordinate.position.x) &&
-                    possiblePosition.y == Mathf.RoundToInt(sourceCoordinate.position.z)
-                    )
-                {
-                    continue;
-                }
+                if (possiblePosition.x == Mathf.RoundToInt(sourceCoordinate.position.x) && possiblePosition.y == Mathf.RoundToInt(sourceCoordinate.position.z)) continue;
                 
                 // If it is occupied, don't show
                 if (IsOccupied(possiblePosition)) continue;
@@ -322,6 +314,7 @@ namespace Game.Scripts
             if(occupiedPositions.Contains(targetPosition)) return true;
             return false;
         }
+        
         private GroundStack GetStack(Vector2Int position)
         {
             int index = position.y * _boardSize + position.x;
@@ -340,7 +333,6 @@ namespace Game.Scripts
         {
             Piece piece = player.Team[pieceNumber];
             piecePositions.Add(piece, coordinate);
-            // Debug.Log(piece.name + ", pos=" + coordinate.position);
             piece.transform.position = ToBoardCoordinatePiece(piece, stack);
         }
 
