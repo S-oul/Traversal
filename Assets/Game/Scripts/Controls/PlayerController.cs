@@ -19,7 +19,8 @@ namespace Game.Scripts.Controls
                 Camera cam = Camera.main;
                 
                 Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-
+                
+                // If player clicks on the piece
                 if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity, ~0))
                 {
                     if(outliner)
@@ -29,13 +30,13 @@ namespace Game.Scripts.Controls
                     }
                     outliner = hitInfo.collider.GetComponent<Outline>(); // New piece
                     print(hitInfo.collider.name);
-                   
+
                     Piece piece = hitInfo.collider.GetComponent<Piece>();
+                    
                     boardManager.PlaceCircles(piece);
                     if(outliner) outliner.enabled = true;
                 }
             }
-            
         }
         
         public void OnRightClick(InputAction.CallbackContext callbackContext)
