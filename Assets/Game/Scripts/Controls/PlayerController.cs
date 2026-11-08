@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -26,14 +27,22 @@ namespace Game.Scripts.Controls
                 {
                     if(_lastSelectedPiece)
                     {
-                        boardManager.HideCircles();
+                        //boardManager.HideCircles();
                         _lastSelectedPiece.UnSelectPiece();
                     }
 
                     if (hitInfo.collider.CompareTag("Circle"))
                     {
                         log += " On Circle";
-                        //HandleMov    
+                        if (boardManager.CircleStack.TryGetValue(hitInfo.collider.gameObject, out GroundStack targetStack))
+                        {
+                            boardManager.HideCircles();
+                            boardManager.UpdatePiecePosition(_lastSelectedPiece, targetStack);
+                        }
+                        else
+                        {
+                            print("shit");
+                        }                   //HandleMov    
                     }
 
                     if (hitInfo.collider.CompareTag("Piece"))

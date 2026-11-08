@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -17,6 +16,7 @@ namespace Game.Scripts
         [SerializeField] private int[,] boardHeights;
         [SerializeField] private Dictionary<Piece, GroundStack> _pieceGroundStack;
         [SerializeField] private Dictionary<Vector2Int, Piece> _positionPiece;
+        [SerializeField] private Dictionary<GameObject, GroundStack> _circleStack;
         [SerializeField] private Player player1;
         [SerializeField] private Player player2;
         
@@ -39,6 +39,7 @@ namespace Game.Scripts
         public Dictionary<Piece, GroundStack> PieceGroundStack { get => _pieceGroundStack; set => _pieceGroundStack = value; }
         public int[,] BoardHeights { get => boardHeights; set => boardHeights = value; }
         public GroundStack[,] Board { get => board; set => board = value; }
+        public Dictionary<GameObject, GroundStack> CircleStack { get => _circleStack; set => _circleStack = value; }
         #endregion
 
         private void Start()
@@ -58,6 +59,7 @@ namespace Game.Scripts
         #region board-setup
         public void SetUpBoard()
         {
+            _circleStack = new();
             FEN_Notation = "";
             boardHeights = new int[_boardSize, _boardSize];
             board = new GroundStack[_boardSize, _boardSize];
@@ -213,6 +215,23 @@ namespace Game.Scripts
             {
                 circle.gameObject.SetActive(false);
             }
+            _circleStack.Clear();
+        }
+
+        public void UpdatePiecePosition(Piece piece, GroundStack newStack)
+        {
+            if (_pieceGroundStack.TryGetValue(piece, out GroundStack oldStack))
+            {
+                _positionPiece.Remove(oldStack.GridPos);
+            }
+
+            _pieceGroundStack[piece] = newStack;
+
+            _positionPiece[newStack.GridPos] = piece;
+
+            piece.Stack = newStack;
+
+            piece.transform.position = ToBoardCoordinatePiece(piece, newStack);
         }
 
         private static readonly (int dx, int dy)[] Directions = 
@@ -288,7 +307,10 @@ namespace Game.Scripts
                         
                         if(otherPiece.Player == piece.Player) continue;
                         
-                        if(!CanAttack(piece, otherPiece))
+                        int VanguardShit = 0;
+                        if(piece is Vanguard) VanguardShit = nextBudget == 0? 1:0;
+
+                        if(!CanAttack(piece, otherPiece, VanguardShit))
                         {
                             continue;
                         }
@@ -305,8 +327,8 @@ namespace Game.Scripts
                         }
 
                         remainingAt[x2, y2] = nextBudget;
-                        if(enqueueToSearch) toSearch.Enqueue((nextStack, nextBudget));
                     }
+                    if(enqueueToSearch) toSearch.Enqueue((nextStack, nextBudget));
                 }
             }
             
@@ -319,18 +341,20 @@ namespace Game.Scripts
                 if (index >= circlePreFabs.Count) break;
 
                 var circle = circlePreFabs[index];
+                circle.name = "circle" + Random.value;
                 circle.transform.position = ToBoardCoordinate(i) + Vector3.up * .11f;
                 circle.gameObject.SetActive(true);
                 circle.GetComponent<SpriteRenderer>().color = piece.Player == player1? Color.blue: Color.red;
+                _circleStack.TryAdd(circle,i);
                 index++;
             } 
 
             return result;
         }
 
-        private bool CanAttack(Piece attacker, Piece defender)
+        private bool CanAttack(Piece attacker, Piece defender, int VanguardMaxValue = 0)
         {
-            int attack = attacker.Attack;
+            int attack = attacker.Attack + VanguardMaxValue;
             int defense = defender.Attack;
 
             // Height advantage
@@ -353,10 +377,11 @@ namespace Game.Scripts
                 }
             }
 
-            print(
-                $"Attack on {defender.name}: {attack} vs {defense} " +
-                $"(attack is: {attacker.Attack}, Defense: {defender.Attack})"
-            );
+            // print(
+            //     "Vanguard value is : " + VanguardMaxValue + " " +
+            //     $"Attack on {defender.name}: {attack} vs {defense} " +
+            //     $"(attack is: {attacker.Attack}, Defense: {defender.Attack})"
+            // );
 
             return attack >= defense;
         }
