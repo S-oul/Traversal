@@ -11,6 +11,7 @@ namespace Game.Scripts
 {
     public class BoardManager : MonoBehaviour
     {
+        #region variables
         [SerializeField] private TerrainGeneration generator; 
         [SerializeField] private GroundStack[,] board;
         [SerializeField] private int[,] boardHeights;
@@ -31,14 +32,14 @@ namespace Game.Scripts
         [SerializeField] private GameObject circlePrefab;
         private List<GameObject> circlePreFabs;
         
-        public Dictionary<Piece, GroundStack> PieceGroundStack
-        {
-            get => _pieceGroundStack;
-            set => _pieceGroundStack = value;
-        }
-
+        HashSet<Vector2Int> usedPositions = new HashSet<Vector2Int>();
+        
+        #endregion
+        #region getters
+        public Dictionary<Piece, GroundStack> PieceGroundStack { get => _pieceGroundStack; set => _pieceGroundStack = value; }
         public int[,] BoardHeights { get => boardHeights; set => boardHeights = value; }
         public GroundStack[,] Board { get => board; set => board = value; }
+        #endregion
 
         private void Start()
         {
@@ -54,6 +55,7 @@ namespace Game.Scripts
             //SetUpBoard();
         }
 
+        #region board-setup
         public void SetUpBoard()
         {
             FEN_Notation = "";
@@ -147,7 +149,6 @@ namespace Game.Scripts
             SetupPieceIfValid(player2, 5, new Vector2Int(0, 7));
         }
 
-        HashSet<Vector2Int> usedPositions = new HashSet<Vector2Int>();
         private void RandomSetupTeamPieces()
         {
             usedPositions = new HashSet<Vector2Int>();
@@ -157,11 +158,9 @@ namespace Game.Scripts
 
         private void SetupRandomTeam(Player player)
         {
-
             for (int i = 0; i < 6; i++)
             {
                 Vector2Int randomPos;
-
                 do
                 {
                     randomPos = new Vector2Int(
@@ -170,7 +169,6 @@ namespace Game.Scripts
                     );
                 }
                 while (!usedPositions.Add(randomPos));
-
                 SetupPieceIfValid(player, i, randomPos);
             }
         }
@@ -192,17 +190,23 @@ namespace Game.Scripts
                 }
             }
         }
-
-        public Vector3 ToBoardCoordinatePiece(Piece piece, GroundStack stack)
+        
+        private Vector3 ToBoardCoordinatePiece(Piece piece, GroundStack stack)
         {
             return new Vector3(stack.transform.position.x, stack.Top() + piece.GetMidHeight(), stack.transform.position.z);
         }
         
-        public Vector3 ToBoardCoordinate(GroundStack stack)
+        private Vector3 ToBoardCoordinate(GroundStack stack)
         {
             return new Vector3(stack.transform.position.x, stack.Top(), stack.transform.position.z);
         }
-
+        #endregion
+        #region piece-movement
+        public void HandleMovement(Vector2Int targetPosition)
+        {
+            
+        }
+        
         public void HideCircles()
         {
             foreach(GameObject circle in circlePreFabs)
@@ -332,8 +336,7 @@ namespace Game.Scripts
 
             return result;
         }
-
-        #region JASON
+        #endregion
         #region GraphBuild
         private void AddGraphEdges()
         {
@@ -442,7 +445,6 @@ namespace Game.Scripts
                 Dijkstra(_graph.adjacency, stack.GridPos);
             return distances;
         }
-        #endregion
         #endregion
     }
     

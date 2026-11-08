@@ -60,7 +60,6 @@ namespace Game.Scripts.Controls
             {
                 Debug.Log("Right click performed");
                 boardManager.HideCircles();
-
             }
         }
     }
