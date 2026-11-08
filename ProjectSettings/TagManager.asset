@@ -5,8 +5,8 @@ TagManager:
   serializedVersion: 3
   tags:
   - Board
-  - Circle
   - Piece
+  - Circles
   layers:
   - Default
   - TransparentFX

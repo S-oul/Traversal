@@ -64,7 +64,7 @@ namespace Game.Scripts
             boardHeights = new int[_boardSize, _boardSize];
             board = new GroundStack[_boardSize, _boardSize];
             _pieceGroundStack = new Dictionary<Piece, GroundStack>();
-            positionPiece = new Dictionary<Vector2Int, Piece>(); 
+            _positionPiece = new Dictionary<Vector2Int, Piece>(); 
             _team1 = player1.Team;
             _team2 = player2.Team;
             
@@ -113,7 +113,7 @@ namespace Game.Scripts
                         }
                         
                         Piece piece;
-                        positionPiece.TryGetValue(new Vector2Int(x, y), out piece);
+                        _positionPiece.TryGetValue(new Vector2Int(x, y), out piece);
                         char notation = piece.AlgebraicNotation();
                         notation = piece.Player == player1? char.ToUpper(notation) : char.ToLower(notation);
                         fen.Append(notation);
@@ -188,7 +188,7 @@ namespace Game.Scripts
                     piece.Player = player;
                     piece.Stack = stack;
                     _pieceGroundStack.TryAdd(piece,stack);
-                    positionPiece.TryAdd(coordinate, piece);
+                    _positionPiece.TryAdd(coordinate, piece);
                     piece.transform.position = ToBoardCoordinatePiece(piece, stack);
                 }
             }
@@ -432,7 +432,7 @@ namespace Game.Scripts
                 var circle = circlePreFabs[index];
                 circlePreFabs[index].transform.position = ToBoardCoordinate(stack);
                 circlePreFabs[index].gameObject.SetActive(true);
-                circleAndStack.Add(circle, stack);
+                _circleStack.Add(circle, stack);
                 index++;
             }
             
@@ -485,7 +485,7 @@ namespace Game.Scripts
         
         private bool IsOccupied(Vector2Int targetPosition)
         {
-            return positionPiece.ContainsKey(targetPosition);
+            return _positionPiece.ContainsKey(targetPosition);
         }
         
         private GroundStack GetStack(Vector2Int position)

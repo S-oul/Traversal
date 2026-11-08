@@ -52,7 +52,8 @@ namespace Game.Scripts.Controls
                         piece.SelectPiece();
                         _lastSelectedPiece = piece;
 
-                        boardManager.PlaceCircles(piece);
+                        // boardManager.PlaceCircles(piece);
+                        boardManager.ManhattanDistanceWithHeight(piece);
                     }
                 }
                 
