@@ -17,6 +17,7 @@ namespace Game.Scripts
         [SerializeField] private int[,] boardHeights;
         [SerializeField] private Dictionary<Piece, GroundStack> _pieceGroundStack;
         [SerializeField] private Dictionary<Vector2Int, Piece> _positionPiece;
+        [SerializeField] private Dictionary<GameObject, GroundStack> _circleAndStack;
         [SerializeField] private Player player1;
         [SerializeField] private Player player2;
         
@@ -39,6 +40,10 @@ namespace Game.Scripts
         public Dictionary<Piece, GroundStack> PieceGroundStack { get => _pieceGroundStack; set => _pieceGroundStack = value; }
         public int[,] BoardHeights { get => boardHeights; set => boardHeights = value; }
         public GroundStack[,] Board { get => board; set => board = value; }
+        public Dictionary<GameObject, GroundStack> circleAndStack => _circleAndStack;
+
+        public Dictionary<Vector2Int, Piece> positionPiece { get => _positionPiece; set => _positionPiece = value; }
+
         #endregion
 
         private void Start()
@@ -52,17 +57,18 @@ namespace Game.Scripts
                 circle.transform.SetParent(container.transform);
                 circlePreFabs.Add(circle);
             }
-            //SetUpBoard();
+            // SetUpBoard();
         }
 
         #region board-setup
         public void SetUpBoard()
         {
+            _circleAndStack = new();
             FEN_Notation = "";
             boardHeights = new int[_boardSize, _boardSize];
             board = new GroundStack[_boardSize, _boardSize];
             _pieceGroundStack = new Dictionary<Piece, GroundStack>();
-            _positionPiece = new Dictionary<Vector2Int, Piece>(); 
+            positionPiece = new Dictionary<Vector2Int, Piece>(); 
             _team1 = player1.Team;
             _team2 = player2.Team;
             
@@ -74,10 +80,12 @@ namespace Game.Scripts
                 if (x >= 0 && x < _boardSize && y >= 0 && y < _boardSize)
                 {
                     board[x, y] = stack;
+                    _graph.AddVertex(new Vector2Int(x, y));
                 }
             }
-            RandomSetupTeamPieces();
-            //SetupTeamPieces();
+            // RandomSetupTeamPieces();
+            SetupTeamPieces();
+            AddGraphEdges();
             print(CreateFenNotation());
         }
 
@@ -109,7 +117,7 @@ namespace Game.Scripts
                         }
                         
                         Piece piece;
-                        _positionPiece.TryGetValue(new Vector2Int(x, y), out piece);
+                        positionPiece.TryGetValue(new Vector2Int(x, y), out piece);
                         char notation = piece.AlgebraicNotation();
                         notation = piece.Player == player1? char.ToUpper(notation) : char.ToLower(notation);
                         fen.Append(notation);
@@ -182,21 +190,20 @@ namespace Game.Scripts
                 {
                     Piece piece = player.Team[pieceIndex];
                     piece.Player = player;
-                    PieceGroundStack[piece] = stack;
                     piece.Stack = stack;
                     _pieceGroundStack.TryAdd(piece,stack);
-                    _positionPiece.TryAdd(coordinate, piece);
+                    positionPiece.TryAdd(coordinate, piece);
                     piece.transform.position = ToBoardCoordinatePiece(piece, stack);
                 }
             }
         }
         
-        private Vector3 ToBoardCoordinatePiece(Piece piece, GroundStack stack)
+        public Vector3 ToBoardCoordinatePiece(Piece piece, GroundStack stack)
         {
             return new Vector3(stack.transform.position.x, stack.Top() + piece.GetMidHeight(), stack.transform.position.z);
         }
         
-        private Vector3 ToBoardCoordinate(GroundStack stack)
+        public Vector3 ToBoardCoordinate(GroundStack stack)
         {
             return new Vector3(stack.transform.position.x, stack.Top(), stack.transform.position.z);
         }
@@ -213,6 +220,29 @@ namespace Game.Scripts
             {
                 circle.gameObject.SetActive(false);
             }
+            circleAndStack.Clear();
+        }
+
+        public void UpdateGameState(Piece piece, GroundStack oldStack, Vector2Int newCoordinate)
+        {
+            Vector2Int piecePosOnBoard = oldStack.GridPos;
+            
+            Vector2Int oldPos2 = Vector2Int.zero;
+            foreach (var kvp in positionPiece)
+            {
+                if (kvp.Value == piece)
+                {
+                    oldPos2 = kvp.Key;
+                    Debug.Log("Piece" + piece.name + "MyKey =" + oldPos2); 
+                }
+            }
+            
+            _positionPiece.Remove(oldPos2);
+            positionPiece[newCoordinate] = piece; // The piece is now at newCoordinate
+            GroundStack newStack = board[newCoordinate.x - 1, newCoordinate.y - 1];
+            _pieceGroundStack[piece] = newStack;
+            piece.Stack = newStack;
+            
         }
 
         private static readonly (int dx, int dy)[] Directions = 
@@ -331,12 +361,35 @@ namespace Game.Scripts
                 circle.transform.position = ToBoardCoordinate(i) + Vector3.up * .11f;
                 circle.gameObject.SetActive(true);
                 circle.GetComponent<SpriteRenderer>().color = piece.Player == player1? Color.blue: Color.red;
+                circleAndStack.Add(circle, i);
                 index++;
             } 
 
             return result;
         }
+
+        public void PlaceCircle(Piece piece, Vector2Int source)
+        {
+            GroundStack startPoint = piece.Stack;
+            
+            Dictionary<Vector2Int, int> myPosAndDistance = Dijkstra(_graph.adjacency, source);
+            int index = 0;
+            foreach(var i in myPosAndDistance.Keys)
+            {
+                GroundStack stack = _pieceGroundStack[piece];
+                if (index >= circlePreFabs.Count) break;
+
+                var circle = circlePreFabs[index];
+                circle.transform.position = ToBoardCoordinate(stack) + Vector3.up * .11f;
+                circle.gameObject.SetActive(true);
+                circle.GetComponent<SpriteRenderer>().color = piece.Player == player1? Color.blue: Color.red;
+                circleAndStack.Add(circle, stack);
+                index++;
+            } 
+
+        }
         #endregion
+        
         #region GraphBuild
         private void AddGraphEdges()
         {
@@ -372,7 +425,7 @@ namespace Game.Scripts
         
         private bool IsOccupied(Vector2Int targetPosition)
         {
-            return _positionPiece.ContainsKey(targetPosition);
+            return positionPiece.ContainsKey(targetPosition);
         }
         
         private GroundStack GetStack(Vector2Int position)
@@ -441,8 +494,7 @@ namespace Game.Scripts
         private Dictionary<Vector2Int, int> GetDistances(Piece piece)
         {
             GroundStack stack = _pieceGroundStack[piece];
-            Dictionary<Vector2Int, int> distances =
-                Dijkstra(_graph.adjacency, stack.GridPos);
+            Dictionary<Vector2Int, int> distances = Dijkstra(_graph.adjacency, stack.GridPos);
             return distances;
         }
         #endregion

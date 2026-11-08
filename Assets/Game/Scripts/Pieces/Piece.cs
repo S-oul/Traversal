@@ -33,7 +33,7 @@ namespace Game.Scripts
             _outline.enabled = true;
         }
 
-        public void UnSelectPiece()
+        public void UnselectPiece()
         {
             _outline.enabled = false;
         }

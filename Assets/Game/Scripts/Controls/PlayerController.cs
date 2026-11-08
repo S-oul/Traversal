@@ -26,13 +26,23 @@ namespace Game.Scripts.Controls
                 {
                     if(_lastSelectedPiece)
                     {
-                        boardManager.HideCircles();
-                        _lastSelectedPiece.UnSelectPiece();
+                        _lastSelectedPiece.UnselectPiece();
                     }
 
-                    if (hitInfo.collider.CompareTag("Circle"))
+                    if (hitInfo.collider.CompareTag("Circles"))
                     {
                         log += " On Circle";
+                        Debug.Log(hitInfo.collider.transform.position);
+                        if (boardManager.circleAndStack.TryGetValue(hitInfo.collider.gameObject, out GroundStack currentStack))
+                        {
+                            Vector3 position3D = boardManager.ToBoardCoordinatePiece(_lastSelectedPiece, currentStack);
+                            Vector2Int newPos = new Vector2Int(Mathf.RoundToInt(position3D.x), Mathf.RoundToInt(position3D.z));
+                            
+                            _lastSelectedPiece.transform.position = boardManager.ToBoardCoordinatePiece(_lastSelectedPiece, currentStack);
+                            
+                            boardManager.HideCircles();
+                            boardManager.UpdateGameState(_lastSelectedPiece, currentStack, newPos);
+                        }
                         //HandleMov    
                     }
 
