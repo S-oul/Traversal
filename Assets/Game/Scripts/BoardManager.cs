@@ -263,35 +263,11 @@ namespace Game.Scripts
                 {
                     int x2 = currentX + dx;
                     int y2 = currentY + dy;
-                    
+                    Vector2Int nextPos = new Vector2Int(x2, y2);
+
                     //need to add Win Board Conditions
                     if (x2 < 0 || x2 >= _boardSize || y2 < 0 || y2 >= _boardSize)
                         continue;
-
-                    bool doSkip = false;
-                    bool enqueueToSearch = true;
-                    foreach(var kvp in _pieceGroundStack)
-                    {
-                        Piece otherPiece = kvp.Key;
-                        if(otherPiece == piece) continue;
-                        if(!doSkip && kvp.Value.GridPos == new Vector2Int(x2, y2))
-                        {
-                            if
-                            (
-                                otherPiece.Player != piece.Player 
-                                && otherPiece.Attack <= piece.Attack
-                            )
-                            {
-                                //can attack Case Valid but do not search for case after;
-                                enqueueToSearch = false;
-                            }
-                            else 
-                            { 
-                                doSkip = true;
-                            }
-                        }
-                    }
-                    if(doSkip) continue;
 
 
                     int nextElevation = boardHeights[x2, y2];
@@ -302,6 +278,21 @@ namespace Game.Scripts
 
                     if (nextBudget < 0)
                         continue;
+
+
+                    bool enqueueToSearch = true;
+                    
+                    if(_positionPiece.TryGetValue(nextPos, out Piece otherPiece))
+                    {
+                        enqueueToSearch = false;
+                        
+                        if(otherPiece.Player == piece.Player) continue;
+                        
+                        if(!CanAttack(piece, otherPiece))
+                        {
+                            continue;
+                        }
+                    }
 
                     GroundStack nextStack = board[x2, y2];
                     if (nextStack == null) continue;
@@ -336,6 +327,58 @@ namespace Game.Scripts
 
             return result;
         }
+
+        private bool CanAttack(Piece attacker, Piece defender)
+        {
+            int attack = attacker.Attack;
+            int defense = defender.Attack;
+
+            // Height advantage
+            attack += attacker.Stack.Level > defender.Stack.Level ? 1 :
+                    attacker.Stack.Level < defender.Stack.Level ? -1 : 0;
+
+            // Adjacent support and defense
+            List<Piece> adjacentDefenderPieces = GetAdjacentPieces(defender);
+
+            foreach (Piece piece in adjacentDefenderPieces)
+            {
+                if (piece.Player == defender.Player)
+                {
+                    defense += 1;
+                }
+                else if (piece.Player != defender.Player && piece != attacker)
+                {
+                    int supportAttack = piece.Attack;
+                    attack += supportAttack;
+                }
+            }
+
+            print(
+                $"Attack on {defender.name}: {attack} vs {defense} " +
+                $"(attack is: {attacker.Attack}, Defense: {defender.Attack})"
+            );
+
+            return attack >= defense;
+        }
+
+        private List<Piece> GetAdjacentPieces(Piece piece)
+        {
+            List<Piece> adjacentPieces = new();
+
+            Vector2Int origin = piece.Stack.GridPos;
+
+            foreach (var (dx, dy) in Directions)
+            {
+                Vector2Int pos = origin + new Vector2Int(dx, dy);
+
+                if (_positionPiece.TryGetValue(pos, out Piece otherPiece))
+                    adjacentPieces.Add(otherPiece);
+                
+            }
+
+            return adjacentPieces;
+        }
+
         #endregion
         #region GraphBuild
         private void AddGraphEdges()
