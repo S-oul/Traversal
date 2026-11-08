@@ -30,7 +30,7 @@ namespace Game.Scripts.Controls
                         _lastSelectedPiece.UnSelectPiece();
                     }
 
-                    if (hitInfo.collider.CompareTag("Circles"))
+                    if (hitInfo.collider.CompareTag("Circle"))
                     {
                         log += " On Circle";
                         //HandleMov    

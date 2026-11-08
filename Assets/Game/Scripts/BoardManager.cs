@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using Unity.VisualScripting;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Game.Scripts
 {
@@ -18,6 +20,8 @@ namespace Game.Scripts
         [SerializeField] private Player player2;
         
         [SerializeField] string FEN_Notation;
+        
+        private readonly Graph _graph = new();
         private List<Piece> _team1 = new();
         private List<Piece> _team2 = new();
         
@@ -189,13 +193,6 @@ namespace Game.Scripts
             }
         }
 
-        // private void SetUpPiecePositions(Player player, int pieceNumber, Vector2Int coordinate, GroundStack stack)
-        // {
-        //     Piece piece = player.Team[pieceNumber];
-        //     piecePositions[piece] = stack;
-        //     piece.transform.position = ToBoardCoordinatePiece(piece, stack);
-        // }
-
         public Vector3 ToBoardCoordinatePiece(Piece piece, GroundStack stack)
         {
             return new Vector3(stack.transform.position.x, stack.Top() + piece.GetMidHeight(), stack.transform.position.z);
@@ -335,5 +332,119 @@ namespace Game.Scripts
 
             return result;
         }
+
+        #region JASON
+        #region GraphBuild
+        private void AddGraphEdges()
+        {
+            Vector2Int[] directions =
+            {
+                Vector2Int.up,
+                Vector2Int.down,
+                Vector2Int.left,
+                Vector2Int.right
+            };
+            
+            // If you combine directions with the explorator, cost of the edge is reduced
+            // Same if you make two steps forward regardless height/direction
+            
+            foreach (Vector2Int vertex in _graph.Vertices)
+            {
+                foreach (Vector2Int direction in directions)
+                {
+                    Vector2Int neighbor = vertex + direction;
+
+                    if (!_graph.ContainsVertex(neighbor)) continue;
+
+                    GroundStack from = GetStack(vertex);
+                    GroundStack to = GetStack(neighbor);
+
+                    int cost = GetMovementCost(from, to);
+                    if (!IsOccupied(neighbor)) _graph.AddEdge(vertex, neighbor, cost);
+                }
+            }
+        }
+        #endregion
+        #region Dijsktra
+        
+        private bool IsOccupied(Vector2Int targetPosition)
+        {
+            return _positionPiece.ContainsKey(targetPosition);
+        }
+        
+        private GroundStack GetStack(Vector2Int position)
+        {
+            return board[position.x, position.y];
+        }
+        
+        private int GetMovementCost(GroundStack from, GroundStack to)
+        {
+            int heightDifference = Mathf.Abs(to.Level - from.Level);
+            return 1 + heightDifference;
+        }
+        
+        /// <summary>
+        /// C'est très compliqué, sujet de doctorat possible
+        /// </summary>
+        /// <param name="adjacency"></param>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        private Dictionary<Vector2Int, int> Dijkstra(Dictionary<Vector2Int, List<Edge>> adjacency, Vector2Int source)
+        {
+            int vertexCount = adjacency.Count;
+
+            Dictionary<Vector2Int, int> distances = new(vertexCount);
+            HashSet<Vector2Int> visited = new(vertexCount);
+
+            foreach (Vector2Int vertex in adjacency.Keys) distances[vertex] = int.MaxValue;
+            if (!adjacency.ContainsKey(source)) return distances;
+            
+            distances[source] = 0;
+
+            while (true)
+            {
+                Vector2Int? current = null;
+                int minDistance = int.MaxValue;
+
+                foreach (Vector2Int vertex in adjacency.Keys)
+                {
+                    if (visited.Contains(vertex)) continue;
+                    if (distances[vertex] < minDistance)
+                    {
+                        minDistance = distances[vertex];
+                        current = vertex;
+                    }
+                }
+
+                if (current == null) break;
+                Vector2Int u = current.Value;
+                int d = distances[u];
+
+                foreach (Edge edge in adjacency[u])
+                {
+                    Vector2Int v = edge.To;
+                    int cost = edge.Cost;
+
+                    if (visited.Contains(v)) continue;
+                    int newDistance = d + cost;
+                    if (newDistance < distances[v]) distances[v] = newDistance;
+                    
+                }
+                visited.Add(u);
+            }
+            return distances;
+        }
+        
+        private Dictionary<Vector2Int, int> GetDistances(Piece piece)
+        {
+            GroundStack stack = _pieceGroundStack[piece];
+            Dictionary<Vector2Int, int> distances =
+                Dijkstra(_graph.adjacency, stack.GridPos);
+            return distances;
+        }
+        #endregion
+        #endregion
     }
+    
+    
 }
