@@ -205,7 +205,7 @@ namespace Game.Scripts
         
         public Vector3 ToBoardCoordinate(GroundStack stack)
         {
-            return new Vector3(stack.transform.position.x, stack.Top(), stack.transform.position.z);
+            return new Vector3(stack.transform.position.x, stack.Top() + .25f, stack.transform.position.z);
         }
         #endregion
         #region piece-movement
@@ -223,26 +223,17 @@ namespace Game.Scripts
             circleAndStack.Clear();
         }
 
-        public void UpdateGameState(Piece piece, GroundStack oldStack, Vector2Int newCoordinate)
+        public void UpdateGameState(Piece piece, GroundStack newStack)
         {
-            Vector2Int piecePosOnBoard = oldStack.GridPos;
-            
-            Vector2Int oldPos2 = Vector2Int.zero;
-            foreach (var kvp in positionPiece)
+            if (_pieceGroundStack.TryGetValue(piece, out GroundStack oldStack))
             {
-                if (kvp.Value == piece)
-                {
-                    oldPos2 = kvp.Key;
-                    Debug.Log("Piece" + piece.name + "MyKey =" + oldPos2); 
-                }
+                _positionPiece.Remove(oldStack.GridPos);
             }
-            
-            _positionPiece.Remove(oldPos2);
-            positionPiece[newCoordinate] = piece; // The piece is now at newCoordinate
-            GroundStack newStack = board[newCoordinate.x - 1, newCoordinate.y - 1];
+
             _pieceGroundStack[piece] = newStack;
+            _positionPiece[newStack.GridPos] = piece;
             piece.Stack = newStack;
-            
+            piece.transform.position = ToBoardCoordinatePiece(piece, newStack);
         }
 
         private static readonly (int dx, int dy)[] Directions = 
@@ -368,25 +359,47 @@ namespace Game.Scripts
             return result;
         }
 
-        public void PlaceCircle(Piece piece, Vector2Int source)
+        public void PlaceCircles(Piece piece)
         {
-            GroundStack startPoint = piece.Stack;
-            
-            Dictionary<Vector2Int, int> myPosAndDistance = Dijkstra(_graph.adjacency, source);
+            Vector2Int sourceCoordinate = piece.Stack.GridPos;
+            Dictionary<Vector2Int, int> distances = GetDistances(piece);
             int index = 0;
-            foreach(var i in myPosAndDistance.Keys)
+            foreach (KeyValuePair<Vector2Int, int> distance in distances)
             {
-                GroundStack stack = _pieceGroundStack[piece];
-                if (index >= circlePreFabs.Count) break;
+                Vector2Int possiblePosition = distance.Key;
+                int d = distance.Value;
 
+                // If distance is too much for piece, don't show a circle
+                if (d > piece.MovementCount) continue;
+                
+                // If it is the source, don't show
+                if (possiblePosition.x == Mathf.RoundToInt(sourceCoordinate.x) && possiblePosition.y == Mathf.RoundToInt(sourceCoordinate.y)) continue;
+                
+                // If it is occupied, don't show
+                if (IsOccupied(possiblePosition)) continue;
+                
+                GroundStack stack = GetStack(possiblePosition);
+
+                if (index >= circlePreFabs.Count) break;
+                
                 var circle = circlePreFabs[index];
-                circle.transform.position = ToBoardCoordinate(stack) + Vector3.up * .11f;
-                circle.gameObject.SetActive(true);
-                circle.GetComponent<SpriteRenderer>().color = piece.Player == player1? Color.blue: Color.red;
+                circlePreFabs[index].transform.position = ToBoardCoordinate(stack);
+                circlePreFabs[index].gameObject.SetActive(true);
                 circleAndStack.Add(circle, stack);
                 index++;
-            } 
-
+            }
+            
+            // foreach (var entry in distances)
+            // {
+            //     if (entry.Value == int.MaxValue)
+            //         continue;
+            //
+            //     Debug.Log(
+            //         $"Position: {entry.Key} | " +
+            //         $"Total cost: {entry.Value} | " +
+            //         $"MovementCount: {piece.MovementCount}"
+            //     );
+            // }
         }
         #endregion
         

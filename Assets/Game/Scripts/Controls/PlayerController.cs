@@ -13,7 +13,6 @@ namespace Game.Scripts.Controls
         
         public void OnLeftClick(InputAction.CallbackContext callbackContext)
         {
-            
             if (callbackContext.performed)
             {
                 Camera cam = Camera.main;
@@ -32,7 +31,6 @@ namespace Game.Scripts.Controls
                     if (hitInfo.collider.CompareTag("Circles"))
                     {
                         log += " On Circle";
-                        Debug.Log(hitInfo.collider.transform.position);
                         if (boardManager.circleAndStack.TryGetValue(hitInfo.collider.gameObject, out GroundStack currentStack))
                         {
                             Vector3 position3D = boardManager.ToBoardCoordinatePiece(_lastSelectedPiece, currentStack);
@@ -41,7 +39,7 @@ namespace Game.Scripts.Controls
                             _lastSelectedPiece.transform.position = boardManager.ToBoardCoordinatePiece(_lastSelectedPiece, currentStack);
                             
                             boardManager.HideCircles();
-                            boardManager.UpdateGameState(_lastSelectedPiece, currentStack, newPos);
+                            boardManager.UpdateGameState(_lastSelectedPiece, currentStack);
                         }
                         //HandleMov    
                     }
@@ -55,7 +53,7 @@ namespace Game.Scripts.Controls
                         piece.SelectPiece();
                         _lastSelectedPiece = piece;
 
-                        boardManager.ManhattanDistanceWithHeight(piece);
+                        boardManager.PlaceCircles(piece);
                     }
                 }
                 
