@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Game.Scripts
 {
@@ -34,6 +31,9 @@ namespace Game.Scripts
         
         public Dictionary<Piece, Coordinate> piecePositions { get => _piecePositions; set => _piecePositions = value; }
         public List<Coordinate> coordinates { get => _coordinates; set => _coordinates = value; }
+
+        public List<GameObject> circlePreFabs => _circlePreFabs;
+
         #endregion
 
         private void Start()
@@ -46,7 +46,7 @@ namespace Game.Scripts
                 GameObject circle = Instantiate(circlePrefab, new Vector3(-100, 0, -100), Quaternion.Euler(90,0,0));
                 circle.SetActive(false);
                 circle.transform.SetParent(container.transform);
-                _circlePreFabs.Add(circle);
+                circlePreFabs.Add(circle);
             }
             
             SetUpBoard();
@@ -216,10 +216,10 @@ namespace Game.Scripts
                 
                 GroundStack stack = GetStack(possiblePosition);
 
-                if (index >= _circlePreFabs.Count) break;
+                if (index >= circlePreFabs.Count) break;
 
-                _circlePreFabs[index].transform.position = ToBoardCoordinate(stack);
-                _circlePreFabs[index].gameObject.SetActive(true);
+                circlePreFabs[index].transform.position = ToBoardCoordinate(stack);
+                circlePreFabs[index].gameObject.SetActive(true);
                 index++;
             }
             
@@ -238,7 +238,7 @@ namespace Game.Scripts
 
         public void HideCircles()
         {
-            foreach(GameObject circle in _circlePreFabs)
+            foreach(GameObject circle in circlePreFabs)
             {
                 circle.gameObject.SetActive(false);
             }
@@ -255,7 +255,6 @@ namespace Game.Scripts
             return new Vector3(stack.transform.position.x, stack.Top() + 0.12f, stack.transform.position.z);
         }
         #endregion
-        
         #region Dijsktra
         
         private bool IsOccupied(Vector2Int targetPosition)
