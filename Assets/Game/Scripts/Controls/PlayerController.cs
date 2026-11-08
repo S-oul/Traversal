@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -31,17 +32,15 @@ namespace Game.Scripts.Controls
                     if (hitInfo.collider.CompareTag("Circles"))
                     {
                         log += " On Circle";
-                        if (boardManager.circleAndStack.TryGetValue(hitInfo.collider.gameObject, out GroundStack currentStack))
+                        if (boardManager.CircleStack.TryGetValue(hitInfo.collider.gameObject, out GroundStack targetStack))
                         {
-                            Vector3 position3D = boardManager.ToBoardCoordinatePiece(_lastSelectedPiece, currentStack);
-                            Vector2Int newPos = new Vector2Int(Mathf.RoundToInt(position3D.x), Mathf.RoundToInt(position3D.z));
-                            
-                            _lastSelectedPiece.transform.position = boardManager.ToBoardCoordinatePiece(_lastSelectedPiece, currentStack);
-                            
                             boardManager.HideCircles();
-                            boardManager.UpdateGameState(_lastSelectedPiece, currentStack);
+                            boardManager.UpdatePiecePosition(_lastSelectedPiece, targetStack);
                         }
-                        //HandleMov    
+                        else
+                        {
+                            print("shit");
+                        }                   //HandleMov    
                     }
 
                     if (hitInfo.collider.CompareTag("Piece"))
