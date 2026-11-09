@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEditor.PackageManager;
 using UnityEngine;
@@ -36,11 +37,15 @@ namespace Game.Scripts.Controls
                         {
                             boardManager.HideCircles();
                             boardManager.UpdatePiecePosition(_lastSelectedPiece, targetStack);
+                           
+                            if(boardManager.blueExtension.Contains(targetStack) || boardManager.redExtension.Contains(targetStack))
+                            {
+                                boardManager.OnPieceOut(_lastSelectedPiece);
+                                _lastSelectedPiece.gameObject.SetActive(false);
+                            }
                         }
-                        else
-                        {
-                            print("shit");
-                        }                   //HandleMov    
+                        
+                        //HandleMov    
                     }
 
                     if (hitInfo.collider.CompareTag("Piece"))
@@ -54,10 +59,11 @@ namespace Game.Scripts.Controls
 
                         // boardManager.PlaceCircles(piece);
                         boardManager.ManhattanDistanceWithHeight(piece);
+                        
                     }
                 }
                 
-                Debug.Log(log);
+                // Debug.Log(log);
             }
             
         }
@@ -66,7 +72,7 @@ namespace Game.Scripts.Controls
         {
             if (callbackContext.performed)
             {
-                Debug.Log("Right click performed");
+                // Debug.Log("Right click performed");
                 boardManager.HideCircles();
             }
         }

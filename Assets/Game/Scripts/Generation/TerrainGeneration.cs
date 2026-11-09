@@ -153,7 +153,7 @@ public class TerrainGeneration : MonoBehaviour
             g.transform.localPosition = new Vector3(-1 - _space, 0, i + _space * i);
             g.GridPos = new Vector2Int(-1, i);
             g.Level = levels[0, i];
-            _boardManager.backBoardExtension1[i] = g;
+            _boardManager.redExtension[i] = g;
             
             
             foreach (MeshRenderer mr in g.GetComponentsInChildren<MeshRenderer>())
@@ -168,7 +168,7 @@ public class TerrainGeneration : MonoBehaviour
             g.transform.localPosition = new Vector3(11, 0, i + _space * i);
             g.GridPos = new Vector2Int(11, i);
             g.Level = levels[9, i];
-            _boardManager.backBoardExtension2[i] = g;
+            _boardManager.blueExtension[i] = g;
             
             foreach (MeshRenderer meshRenderer in g.GetComponentsInChildren<MeshRenderer>())
             {

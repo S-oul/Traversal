@@ -17,8 +17,8 @@ namespace Game.Scripts
         [SerializeField] private Dictionary<Piece, GroundStack> _pieceGroundStack;
         [SerializeField] private Dictionary<Vector2Int, Piece> _positionPiece;
         [SerializeField] private Dictionary<GameObject, GroundStack> _circleStack;
-        [SerializeField] private Player player1;
-        [SerializeField] private Player player2;
+        [SerializeField] private Player redPlayer;
+        [SerializeField] private Player bluePlayer;
         [SerializeField] string FEN_Notation;
         
         private readonly Graph _graph = new();
@@ -33,8 +33,12 @@ namespace Game.Scripts
         
         HashSet<Vector2Int> usedPositions = new HashSet<Vector2Int>();
 
-        private GroundStack[] _backBoardExtension1;
-        private GroundStack[] _backBoardExtension2;
+        private GroundStack[] _blueExtension;
+        private GroundStack[] _redExtension;
+
+        private int pieceOutCount = 0;
+        private int scoreBlue = 0;
+        private int scoreRed = 0;
         
         #endregion
         #region getters
@@ -43,16 +47,16 @@ namespace Game.Scripts
         public GroundStack[,] Board { get => board; set => board = value; }
         public Dictionary<GameObject, GroundStack> CircleStack { get => _circleStack; set => _circleStack = value; }
 
-        public GroundStack[] backBoardExtension1
+        public GroundStack[] blueExtension
         {
-            get => _backBoardExtension1;
-            set => _backBoardExtension1 = value;
+            get => _blueExtension;
+            set => _blueExtension = value;
         }
 
-        public GroundStack[] backBoardExtension2
+        public GroundStack[] redExtension
         {
-            get => _backBoardExtension2;
-            set => _backBoardExtension2 = value;
+            get => _redExtension;
+            set => _redExtension = value;
         }
 
         #endregion
@@ -73,9 +77,25 @@ namespace Game.Scripts
             // SetUpBoard();
         }
 
-        private void Update()
+        public void OnPieceOut(Piece piece)
         {
-                
+            pieceOutCount++;
+            if (piece.Player == redPlayer)
+            {
+                scoreRed += piece.Attack;
+            }
+
+            if (piece.Player == bluePlayer)
+            {
+                scoreBlue += piece.Attack;
+            }
+
+            if (pieceOutCount == 2)
+            {
+                Debug.Log("TA GM");
+                Debug.Log("Red = " + scoreRed);
+                Debug.Log("Blue = " + scoreBlue);
+            }
         }
         
         #region board-setup
@@ -87,11 +107,11 @@ namespace Game.Scripts
             board = new GroundStack[_boardSize, _boardSize];
             _pieceGroundStack = new Dictionary<Piece, GroundStack>();
             _positionPiece = new Dictionary<Vector2Int, Piece>(); 
-            _team1 = player1.Team;
-            _team2 = player2.Team;
+            _team1 = redPlayer.Team;
+            _team2 = bluePlayer.Team;
                         
-            _backBoardExtension1 = new GroundStack[_boardSize];
-            _backBoardExtension2 = new GroundStack[_boardSize];
+            _blueExtension = new GroundStack[_boardSize];
+            _redExtension = new GroundStack[_boardSize];
             foreach (var stack in boardObject.GetComponentsInChildren<GroundStack>())
             {
                 int x = stack.GridPos.x;
@@ -139,7 +159,7 @@ namespace Game.Scripts
                         Piece piece;
                         _positionPiece.TryGetValue(new Vector2Int(x, y), out piece);
                         char notation = piece.AlgebraicNotation();
-                        notation = piece.Player == player1? char.ToUpper(notation) : char.ToLower(notation);
+                        notation = piece.Player == redPlayer? char.ToUpper(notation) : char.ToLower(notation);
                         fen.Append(notation);
                     }
                     else
@@ -161,27 +181,27 @@ namespace Game.Scripts
         private void SetupTeamPieces()
         {
             // Player 1 positions
-            SetupPieceIfValid(player1, 0, new Vector2Int(9, 2));
-            SetupPieceIfValid(player1, 1, new Vector2Int(9, 3));
-            SetupPieceIfValid(player1, 2, new Vector2Int(9, 4));
-            SetupPieceIfValid(player1, 3, new Vector2Int(9, 5));
-            SetupPieceIfValid(player1, 4, new Vector2Int(9, 6));
-            SetupPieceIfValid(player1, 5, new Vector2Int(9, 7));
+            SetupPieceIfValid(redPlayer, 0, new Vector2Int(9, 2));
+            SetupPieceIfValid(redPlayer, 1, new Vector2Int(9, 3));
+            SetupPieceIfValid(redPlayer, 2, new Vector2Int(9, 4));
+            SetupPieceIfValid(redPlayer, 3, new Vector2Int(9, 5));
+            SetupPieceIfValid(redPlayer, 4, new Vector2Int(9, 6));
+            SetupPieceIfValid(redPlayer, 5, new Vector2Int(9, 7));
 
             // Player 2 positions
-            SetupPieceIfValid(player2, 0, new Vector2Int(0, 2));
-            SetupPieceIfValid(player2, 1, new Vector2Int(0, 3));
-            SetupPieceIfValid(player2, 2, new Vector2Int(0, 4));
-            SetupPieceIfValid(player2, 3, new Vector2Int(0, 5));
-            SetupPieceIfValid(player2, 4, new Vector2Int(0, 6));
-            SetupPieceIfValid(player2, 5, new Vector2Int(0, 7));
+            SetupPieceIfValid(bluePlayer, 0, new Vector2Int(0, 2));
+            SetupPieceIfValid(bluePlayer, 1, new Vector2Int(0, 3));
+            SetupPieceIfValid(bluePlayer, 2, new Vector2Int(0, 4));
+            SetupPieceIfValid(bluePlayer, 3, new Vector2Int(0, 5));
+            SetupPieceIfValid(bluePlayer, 4, new Vector2Int(0, 6));
+            SetupPieceIfValid(bluePlayer, 5, new Vector2Int(0, 7));
         }
 
         private void RandomSetupTeamPieces()
         {
             usedPositions = new HashSet<Vector2Int>();
-            SetupRandomTeam(player1);
-            SetupRandomTeam(player2);
+            SetupRandomTeam(redPlayer);
+            SetupRandomTeam(bluePlayer);
         }
 
         private void SetupRandomTeam(Player player)
@@ -276,7 +296,6 @@ namespace Game.Scripts
 
             int startX = startPoint.GridPos.x;
             int startY = startPoint.GridPos.y;
-            Debug.Log($"current pos = ({startX}, {startY})");
             
             remainingAt[startX, startY] = maxMovement;
             toSearch.Enqueue((startPoint, maxMovement));
@@ -303,19 +322,10 @@ namespace Game.Scripts
                     Vector2Int nextPos = new Vector2Int(x2, y2);
 
                     //need to add Win Board Conditions
-                    if (x2 + 1 >= _boardSize)
-                    {
-                        Debug.Log("Can win at " + (x2 + 1));
-                    }
                     
-                    if (x2 - 1 < 0)
-                    {
-                        Debug.Log("Can win at " + (x2 - 1));
-                    }
                     
                     if (x2 < 0 || x2 >= _boardSize || y2 < 0 || y2 >= _boardSize)
                         continue;
-
                     
                     int nextElevation = boardHeights[x2, y2];
                     int heightDiff = Mathf.Abs(nextElevation - currentElevation);
@@ -344,6 +354,16 @@ namespace Game.Scripts
                         }
                     }
 
+                    if (x2 + 1 >= _boardSize && nextBudget > 0)
+                    {
+                        if(piece.Player == bluePlayer) result.Add(blueExtension[y2]);
+                    }
+
+                    if (x2 - 1 < 0 && nextBudget > 0)
+                    { 
+                        if(piece.Player == redPlayer) result.Add(redExtension[y2]);
+                    }
+                    
                     GroundStack nextStack = board[x2, y2];
                     if (nextStack == null) continue;
 
@@ -372,7 +392,7 @@ namespace Game.Scripts
                 circle.name = "circle" + index;
                 circle.transform.position = ToBoardCoordinate(i) + Vector3.up * .11f;
                 circle.gameObject.SetActive(true);
-                circle.GetComponent<SpriteRenderer>().color = piece.Player == player1? Color.blue: Color.red;
+                circle.GetComponent<SpriteRenderer>().color = piece.Player == redPlayer? Color.blue: Color.red;
                 
                 _circleStack.TryAdd(circle,i);
                 index++;
