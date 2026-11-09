@@ -19,7 +19,6 @@ namespace Game.Scripts
         [SerializeField] private Dictionary<GameObject, GroundStack> _circleStack;
         [SerializeField] private Player player1;
         [SerializeField] private Player player2;
-        
         [SerializeField] string FEN_Notation;
         
         private readonly Graph _graph = new();
@@ -33,6 +32,9 @@ namespace Game.Scripts
         private List<GameObject> circlePreFabs;
         
         HashSet<Vector2Int> usedPositions = new HashSet<Vector2Int>();
+
+        private GroundStack[] _backBoardExtension1;
+        private GroundStack[] _backBoardExtension2;
         
         #endregion
         #region getters
@@ -40,12 +42,27 @@ namespace Game.Scripts
         public int[,] BoardHeights { get => boardHeights; set => boardHeights = value; }
         public GroundStack[,] Board { get => board; set => board = value; }
         public Dictionary<GameObject, GroundStack> CircleStack { get => _circleStack; set => _circleStack = value; }
+
+        public GroundStack[] backBoardExtension1
+        {
+            get => _backBoardExtension1;
+            set => _backBoardExtension1 = value;
+        }
+
+        public GroundStack[] backBoardExtension2
+        {
+            get => _backBoardExtension2;
+            set => _backBoardExtension2 = value;
+        }
+
         #endregion
 
         private void Start()
         {
             GameObject container = new GameObject("CirclesContainer"); 
             circlePreFabs = new List<GameObject>();
+
+            
             for (int i = 0; i <= 200; i++)
             {
                 GameObject circle = Instantiate(circlePrefab, new Vector3(-100, 0, -100), Quaternion.Euler(90,0,0));
@@ -56,6 +73,11 @@ namespace Game.Scripts
             // SetUpBoard();
         }
 
+        private void Update()
+        {
+                
+        }
+        
         #region board-setup
         public void SetUpBoard()
         {
@@ -67,7 +89,9 @@ namespace Game.Scripts
             _positionPiece = new Dictionary<Vector2Int, Piece>(); 
             _team1 = player1.Team;
             _team2 = player2.Team;
-            
+                        
+            _backBoardExtension1 = new GroundStack[_boardSize];
+            _backBoardExtension2 = new GroundStack[_boardSize];
             foreach (var stack in boardObject.GetComponentsInChildren<GroundStack>())
             {
                 int x = stack.GridPos.x;
@@ -140,7 +164,7 @@ namespace Game.Scripts
             SetupPieceIfValid(player1, 0, new Vector2Int(9, 2));
             SetupPieceIfValid(player1, 1, new Vector2Int(9, 3));
             SetupPieceIfValid(player1, 2, new Vector2Int(9, 4));
-            SetupPieceIfValid(player1, 3, new Vector2Int(1, 4));
+            SetupPieceIfValid(player1, 3, new Vector2Int(9, 5));
             SetupPieceIfValid(player1, 4, new Vector2Int(9, 6));
             SetupPieceIfValid(player1, 5, new Vector2Int(9, 7));
 
@@ -205,10 +229,6 @@ namespace Game.Scripts
         }
         #endregion
         #region piece-movement
-        public void HandleMovement(Vector2Int targetPosition)
-        {
-            
-        }
         
         public void HideCircles()
         {
@@ -221,17 +241,12 @@ namespace Game.Scripts
 
         public void UpdatePiecePosition(Piece piece, GroundStack newStack)
         {
-            if (_pieceGroundStack.TryGetValue(piece, out GroundStack oldStack))
-            {
-                _positionPiece.Remove(oldStack.GridPos);
-            }
-
+            if (_pieceGroundStack.TryGetValue(piece, out GroundStack oldStack)) _positionPiece.Remove(oldStack.GridPos);
+           
             _pieceGroundStack[piece] = newStack;
-
             _positionPiece[newStack.GridPos] = piece;
-
+            
             piece.Stack = newStack;
-
             piece.transform.position = ToBoardCoordinatePiece(piece, newStack);
         }
 
@@ -261,7 +276,8 @@ namespace Game.Scripts
 
             int startX = startPoint.GridPos.x;
             int startY = startPoint.GridPos.y;
-
+            Debug.Log($"current pos = ({startX}, {startY})");
+            
             remainingAt[startX, startY] = maxMovement;
             toSearch.Enqueue((startPoint, maxMovement));
             //result.Add(startPoint);
@@ -278,7 +294,8 @@ namespace Game.Scripts
                 int currentX = currentCoord.GridPos.x;
                 int currentY = currentCoord.GridPos.y;
                 int currentElevation = boardHeights[currentX, currentY];
-
+                
+                
                 foreach (var (dx, dy) in Directions)
                 {
                     int x2 = currentX + dx;
@@ -286,10 +303,20 @@ namespace Game.Scripts
                     Vector2Int nextPos = new Vector2Int(x2, y2);
 
                     //need to add Win Board Conditions
+                    if (x2 + 1 >= _boardSize)
+                    {
+                        Debug.Log("Can win at " + (x2 + 1));
+                    }
+                    
+                    if (x2 - 1 < 0)
+                    {
+                        Debug.Log("Can win at " + (x2 - 1));
+                    }
+                    
                     if (x2 < 0 || x2 >= _boardSize || y2 < 0 || y2 >= _boardSize)
                         continue;
 
-
+                    
                     int nextElevation = boardHeights[x2, y2];
                     int heightDiff = Mathf.Abs(nextElevation - currentElevation);
 
@@ -340,12 +367,13 @@ namespace Game.Scripts
             foreach(var i in result)
             {
                 if (index >= circlePreFabs.Count) break;
-
+                
                 var circle = circlePreFabs[index];
-                circle.name = "circle" + Random.value;
+                circle.name = "circle" + index;
                 circle.transform.position = ToBoardCoordinate(i) + Vector3.up * .11f;
                 circle.gameObject.SetActive(true);
                 circle.GetComponent<SpriteRenderer>().color = piece.Player == player1? Color.blue: Color.red;
+                
                 _circleStack.TryAdd(circle,i);
                 index++;
             } 
@@ -404,8 +432,7 @@ namespace Game.Scripts
 
             return adjacentPieces;
         }
-
-
+        
         public void PlaceCircles(Piece piece)
         {
             Vector2Int sourceCoordinate = piece.Stack.GridPos;
@@ -435,21 +462,17 @@ namespace Game.Scripts
                 _circleStack.Add(circle, stack);
                 index++;
             }
+        }
+
+        public void PlaceWinningCircles(Piece piece)
+        {
+            Vector2Int myPos = piece.Stack.GridPos;
+            int index = 0;
             
-            // foreach (var entry in distances)
-            // {
-            //     if (entry.Value == int.MaxValue)
-            //         continue;
-            //
-            //     Debug.Log(
-            //         $"Position: {entry.Key} | " +
-            //         $"Total cost: {entry.Value} | " +
-            //         $"MovementCount: {piece.MovementCount}"
-            //     );
-            // }
+            if (index >= circlePreFabs.Count) return;
+
         }
         #endregion
-        
         #region GraphBuild
         private void AddGraphEdges()
         {

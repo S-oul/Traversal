@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Game.Scripts;
 using UnityEngine;
 
@@ -9,6 +10,7 @@ public class TerrainGeneration : MonoBehaviour
     public bool GenerateRandomAtStart = true;
     public bool Enforce2GapLimits = true;
     public bool EnforceMinimumHeigh = true;
+    
     [SerializeField] TerrainGenerationType _type;
     [SerializeReference] private TerrainConfig _currentSettings;
     [SerializeField] private int _seed = 0;
@@ -18,6 +20,8 @@ public class TerrainGeneration : MonoBehaviour
     [SerializeField] private Texture2D _secondNoise;
     [SerializeField] private Texture2D _thirdNoise;
     [SerializeField] private BoardManager _boardManager;
+    [SerializeField] private Material team1Material;
+    [SerializeField] private Material team2Material;
     GameObject board = null;
 
     public int seed => _seed;
@@ -126,6 +130,7 @@ public class TerrainGeneration : MonoBehaviour
         if(Enforce2GapLimits) EnforceMaxSlope(ref levels, maxDifference: 2);
         if(EnforceMinimumHeigh) EnforceMinimumGround(ref levels);
         _boardManager.Board = new GroundStack[GRID_SIZE,GRID_SIZE];
+        
         for (int x = 0; x < GRID_SIZE; x++)
         {
             for (int y = 0; y < GRID_SIZE; y++)
@@ -137,8 +142,40 @@ public class TerrainGeneration : MonoBehaviour
                 _boardManager.Board[x,y] = g;
             }
         }
+
+      
         _boardManager.SetUpBoard();
         _boardManager.BoardHeights = levels;
+        
+        for (int i = 0; i < GRID_SIZE; i++)
+        {
+            GroundStack g = Instantiate(_groundStack, board.transform).GetComponent<GroundStack>();
+            g.transform.localPosition = new Vector3(-1 - _space, 0, i + _space * i);
+            g.GridPos = new Vector2Int(-1, i);
+            g.Level = levels[0, i];
+            _boardManager.backBoardExtension1[i] = g;
+            
+            
+            foreach (MeshRenderer mr in g.GetComponentsInChildren<MeshRenderer>())
+            {
+                mr.material = team2Material;
+            }
+        }
+        
+        for (int i = 0; i < GRID_SIZE; i++)
+        {
+            GroundStack g = Instantiate(_groundStack, board.transform).GetComponent<GroundStack>();
+            g.transform.localPosition = new Vector3(11, 0, i + _space * i);
+            g.GridPos = new Vector2Int(11, i);
+            g.Level = levels[9, i];
+            _boardManager.backBoardExtension2[i] = g;
+            
+            foreach (MeshRenderer meshRenderer in g.GetComponentsInChildren<MeshRenderer>())
+            {
+                meshRenderer.material = team1Material;
+            }
+        }
+
     }
     private void EnforceMinimumGround(ref int[,] gridLevels)
     {
